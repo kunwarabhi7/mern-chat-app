@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/Navbar";
+import { AuthProvider } from "@/context/Auth.Context";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -32,8 +33,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Navbar />
-          <main className="container mx-auto p-4">{children}</main>
+          <AuthProvider>
+            <Navbar />
+            <main className="container mx-auto p-4">{children}</main>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
