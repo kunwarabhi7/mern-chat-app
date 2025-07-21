@@ -1,13 +1,21 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import connectToDB from "./utills/connectToDB.js";
-import { UserRouter } from "./routes/user.route.js";
 import cookieParser from "cookie-parser";
+import { createServer } from "http";
+import connectToDB from "./utils/connectToDB.js";
+import { UserRouter } from "./routes/user.route.js";
+import { MessageRouter } from "./routes/message.route.js";
+import { setupSocket } from "./utils/Socket.js";
+
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 const app = express();
+const server = createServer(app);
+
+//Initialize app
+setupSocket(server);
 
 // cors
 app.use(
@@ -25,6 +33,7 @@ app.use(cookieParser());
 
 //Routes
 app.use("/api/user", UserRouter);
+app.use("/api/message", MessageRouter);
 
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Route working fine" });
@@ -34,7 +43,8 @@ app.get("/", (req, res) => {
 const startServer = async () => {
   try {
     await connectToDB();
-    app.listen(PORT, () => {
+
+    server.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
   } catch (error) {

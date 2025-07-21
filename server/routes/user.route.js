@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  getAllUser,
   getCurrentUser,
   Login,
   logout,
@@ -25,4 +26,6 @@ router.post("/logout", authMiddleware, logout);
 //Get Current User
 router.get("/me", authMiddleware, getCurrentUser);
 
+//Get all User
+router.get("/list", authMiddleware, getAllUser);
 export { router as UserRouter };

@@ -77,37 +77,57 @@ export const Login = async (req, res) => {
 };
 
 export const getCurrentUser = async (req, res) => {
-  const userId = req.user.id;
   try {
-    const user = await User.findById(userId).select("-password");
-
+    console.log("Fetching user for ID:", req.user.id);
+    const user = await User.findById(req.user.id).select("-password");
     if (!user) {
-      return res.status(404).json({ message: "User not Found" });
+      console.log("User not found for ID:", req.user.id);
+      return res.status(404).json({ message: "User not found" });
     }
     res.status(200).json({
       user: { id: user._id, username: user.username, email: user.email },
     });
   } catch (error) {
-    console.error("Error fetching user:", error.message);
+    console.error("Error in /user/me:", error.message);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
 export const logout = async (req, res) => {
   try {
-    if (!req.token || !req.user?.exp) {
-      return res.status(401).json({ message: "Unauthorized" });
+    const token = req.cookies?.token;
+    console.log("Logout token:", token);
+    if (!token) {
+      console.log("No token provided for logout");
+      return res.status(400).json({ message: "No token provided" });
     }
-    const expiresAt = new Date(req.user.exp * 1000);
-    await BlackList.create({ token: req.token, expiresAt });
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    });
-    res.status(200).json({ message: "Logged out successfully" });
+    // Check if token is already blacklisted (optional, to avoid duplicates)
+    const existing = await BlackList.findOne({ token });
+    if (existing) {
+      console.log("Token already blacklisted:", token);
+      res.clearCookie("token");
+      return res.status(200).json({ message: "Logout successful" });
+    }
+    await BlackList.create({ token });
+    console.log("Token blacklisted:", token);
+    res.clearCookie("token");
+    res.status(200).json({ message: "Logout successful" });
   } catch (error) {
-    console.error("Error logging out:", error.message);
+    console.error("Error in logout:", error.message, error.stack);
+    res
+      .status(500)
+      .json({ message: "Server error during logout", error: error.message });
+  }
+};
+
+export const getAllUser = async (req, res) => {
+  try {
+    const user = await User.find({ _id: { $ne: req.user.id } }).select(
+      "username email"
+    );
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error("Error fetching users:", error.message);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

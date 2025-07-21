@@ -35,6 +35,7 @@ export function Navbar() {
               <Button onClick={handleLogout} disabled={loading}>
                 {loading ? "Logging out..." : "Logout"}
               </Button>
+              <Link href="/profile">Profile</Link>
             </>
           ) : (
             <>

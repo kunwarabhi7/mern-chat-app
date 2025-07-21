@@ -1,16 +1,18 @@
+// models/Blacklist.js
 import mongoose from "mongoose";
 
-const blackListSchema = new mongoose.Schema(
-  {
-    token: {
-      type: String,
-      required: [true, "Token is required"],
-      unique: true,
-    },
-    expiresAt: { type: Date, required: [true, "Expiration Date is required"] },
+const blacklistSchema = new mongoose.Schema({
+  token: {
+    type: String,
+    required: true,
+    unique: true,
   },
-  { timestamps: true }
-);
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    expires: "1h", // Auto-remove after 1 hour
+  },
+});
 
-const BlackList = mongoose.model("BlackList", blackListSchema);
+const BlackList = mongoose.model("BlackList", blacklistSchema);
 export default BlackList;
