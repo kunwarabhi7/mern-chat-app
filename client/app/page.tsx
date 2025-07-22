@@ -34,7 +34,7 @@ export default function Home() {
   }
 
   return (
-    <div className="h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <div className="h-[95vh] flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 lg:px-8 overflow-hidden">
       {/* Hero Section */}
       <motion.div
         className="text-center mb-4 sm:mb-6"
@@ -42,9 +42,9 @@ export default function Home() {
         animate="visible"
         variants={heroVariants}
       >
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-blue-500 dark:text-blue-400 mb-2 mt-20 sm:mt-28 md:32 sm:mb-4">
+        {/* <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-blue-500 dark:text-blue-400 mb-2 mt-20 sm:mt-28 md:32 sm:mb-4">
           ChatApp
-        </h1>
+        </h1> */}
         <p className="text-base sm:text-lg md:text-xl text-gray-700 dark:text-gray-300 mb-4 sm:mb-6">
           Connect instantly, chat effortlessly, and share moments with friends!
         </p>
