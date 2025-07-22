@@ -4,55 +4,81 @@
 import { Message, User } from "@/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/context/Auth.Context";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface MessageListProps {
   messages: Message[];
   selectedUser: User | null;
+  typingUser: string | null; // Add typingUser prop
 }
 
 export default function MessageList({
   messages,
   selectedUser,
+  typingUser,
 }: MessageListProps) {
   const { user } = useAuth();
 
-  // Animation variants for messages
   const messageVariants = {
     hidden: { opacity: 0, y: 10 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
   };
 
+  const typingVariants = {
+    hidden: { opacity: 0, y: -10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.2 } },
+  };
+
   return (
-    <ScrollArea className="flex-1 h-[50vh] border border-gray-300 dark:border-gray-600 p-4 rounded-md bg-gray-100 dark:bg-gray-700">
-      {messages && messages.length > 0 ? (
-        messages.map((msg) => (
+    <div className="flex-1 flex flex-col">
+      <AnimatePresence>
+        {typingUser && selectedUser && (
           <motion.div
-            key={msg._id}
-            className={`mb-2 p-2 rounded-md ${
-              msg.sender._id === user?.id
-                ? "ml-auto bg-blue-500 text-white"
-                : "mr-auto bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100"
-            } max-w-[70%]`}
-            variants={messageVariants}
+            key="typing-indicator"
+            variants={typingVariants}
             initial="hidden"
             animate="visible"
+            exit="hidden"
+            className="text-sm text-gray-500 dark:text-gray-400 italic p-2"
           >
-            <p className="text-xs sm:text-sm">
-              <strong>{msg.sender.username}</strong> (
-              {new Date(msg.createdAt).toLocaleTimeString()})
-            </p>
-            {msg.content && <p>{msg.content}</p>}
-            {msg.sticker && <p className="text-lg">{msg.sticker}</p>}
+            {selectedUser.username} is typing...
           </motion.div>
-        ))
-      ) : (
-        <p className="text-gray-600 dark:text-gray-400 text-center">
-          {selectedUser
-            ? "No messages yet."
-            : "Select a user to start chatting."}
-        </p>
-      )}
-    </ScrollArea>
+        )}
+      </AnimatePresence>
+      <ScrollArea className="flex-1 h-[50vh] border border-gray-300 dark:border-gray-600 p-4 rounded-md bg-gray-100 dark:bg-gray-700">
+        {messages && messages.length > 0 ? (
+          messages.map((msg) => (
+            <motion.div
+              key={msg._id}
+              className={`mb-2 p-2 rounded-md ${
+                msg.sender._id === user?.id
+                  ? "ml-auto bg-blue-500 text-white"
+                  : "mr-auto bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100"
+              } max-w-[70%]`}
+              variants={messageVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              <p className="text-xs sm:text-sm">
+                <strong>{msg.sender.username}</strong> (
+                {new Date(msg.createdAt).toLocaleTimeString()})
+              </p>
+              {msg.content && (
+                <p className="text-sm sm:text-base">{msg.content}</p>
+              )}
+              {msg.sticker && (
+                <p className="text-2xl sm:text-3xl">{msg.sticker}</p>
+              )}
+            </motion.div>
+          ))
+        ) : (
+          <p className="text-gray-600 dark:text-gray-400 text-center text-sm">
+            {selectedUser
+              ? "No messages yet."
+              : "Select a user to start chatting."}
+          </p>
+        )}
+      </ScrollArea>
+    </div>
   );
 }

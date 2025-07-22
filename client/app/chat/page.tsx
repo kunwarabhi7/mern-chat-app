@@ -1,3 +1,4 @@
+// app/chat/page.tsx
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -10,31 +11,34 @@ import { io, Socket } from "socket.io-client";
 import UserList from "./component/UserList";
 import MessageList from "./component/MessageList";
 import MessageInput from "./component/MessageInput";
+import { motion } from "framer-motion";
 
 export default function ChatPage() {
-  const {
-    user,
-    loading: authLoading,
-    error: authError,
-    clearError,
-  } = useAuth();
+  const { user, loading: authLoading, error: authError } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [typingUser, setTypingUser] = useState<string | null>(null); // Track typing user
   const socketRef = useRef<Socket | null>(null);
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  };
 
   const api = axios.create({
     baseURL: "http://localhost:5000/api",
     withCredentials: true,
   });
 
-  // Initialize Socket.IO
   useEffect(() => {
     if (!user) return;
 
-    const socket = io("http://localhost:5000", { withCredentials: true });
+    const socket = io("http://localhost:5000", {
+      withCredentials: true,
+    });
     socketRef.current = socket;
 
     socket.on("connect", () => {
@@ -51,6 +55,31 @@ export default function ChatPage() {
           newMessage.recipient._id === user.id)
       ) {
         setMessages((prev) => [...prev, newMessage]);
+        setTypingUser(null); // Clear typing indicator when message is received
+      }
+    });
+
+    socket.on("onlineUsers", (onlineUserIds: string[]) => {
+      console.log("Online users received:", onlineUserIds);
+      setUsers((prevUsers) =>
+        prevUsers.map((u) => ({
+          ...u,
+          isOnline: onlineUserIds.includes(u.id),
+        }))
+      );
+    });
+
+    socket.on("typing", ({ senderId }) => {
+      console.log("Typing received from:", senderId);
+      if (senderId === selectedUser?.id) {
+        setTypingUser(senderId);
+      }
+    });
+
+    socket.on("stopTyping", ({ senderId }) => {
+      console.log("Stop typing received from:", senderId);
+      if (senderId === selectedUser?.id) {
+        setTypingUser(null);
       }
     });
 
@@ -59,15 +88,18 @@ export default function ChatPage() {
       setError("Failed to connect to chat server");
     });
 
+    socket.on("error", (data: { message: string }) => {
+      console.error("Socket.IO error:", data.message);
+      setError(data.message);
+    });
+
     return () => {
       socket.disconnect();
-      socket.off("receiveMessage");
-      socket.off("connect_error");
+      socket.off();
       console.log("Socket.IO disconnected");
     };
   }, [user, selectedUser]);
 
-  // Fetch users
   useEffect(() => {
     const fetchUsers = async () => {
       if (!user) return;
@@ -81,6 +113,7 @@ export default function ChatPage() {
             id: u._id,
             username: u.username,
             email: u.email,
+            isOnline: false,
           }))
         );
       } catch (err: any) {
@@ -93,7 +126,6 @@ export default function ChatPage() {
     fetchUsers();
   }, [user]);
 
-  // Fetch messages
   useEffect(() => {
     const fetchMessages = async () => {
       if (!selectedUser) return;
@@ -102,7 +134,7 @@ export default function ChatPage() {
         setError(null);
         const { data } = await api.get(`/message/${selectedUser.id}`);
         console.log("Fetched messages:", data.messages);
-        setMessages(data.messages || []); // Ensure messages is an array
+        setMessages(data.messages || []);
       } catch (err: any) {
         console.error("Error fetching messages:", err.message);
         setError(err.response?.data?.message || "Failed to fetch messages");
@@ -113,15 +145,15 @@ export default function ChatPage() {
     fetchMessages();
   }, [selectedUser]);
 
-  const handleSendMessage = (content: string) => {
-    if (!selectedUser || !user || !content.trim()) return;
+  const handleSendMessage = (content: string, sticker?: string) => {
+    if (!selectedUser || !user || (!content.trim() && !sticker)) return;
     try {
       setError(null);
       const messageData = {
         senderId: user.id,
         recipientId: selectedUser.id,
-        content,
-        sticker: null,
+        content: content || "",
+        sticker: sticker || null,
       };
       console.log("Sending message:", messageData);
       socketRef.current?.emit("sendMessage", messageData);
@@ -131,56 +163,82 @@ export default function ChatPage() {
     }
   };
 
+  useEffect(() => {
+    const handleResize = () => {
+      console.log("Window size:", {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   if (authLoading || loading) {
-    return <div className="container mx-auto p-4 text-center">Loading...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300">
+        Loading...
+      </div>
+    );
   }
 
   if (!user) {
     return (
-      <div className="container mx-auto p-4 text-center">Please log in</div>
+      <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300">
+        Please log in
+      </div>
     );
   }
 
   return (
     <ProtectedRoute>
-      <div className="container mx-auto p-4 bg-gray-50 dark:bg-gray-900">
-        <Card className="bg-white dark:bg-gray-800 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-blue-500 dark:text-blue-400">
-              Chat
-            </CardTitle>
-            <p className="text-gray-700 dark:text-gray-300">
-              Welcome, {user.username}!
-            </p>
-          </CardHeader>
-          <CardContent className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-            <div className="w-full md:w-1/4">
-              <UserList
-                users={users}
-                selectedUser={selectedUser}
-                setSelectedUser={setSelectedUser}
-              />
-            </div>
-            <div className="w-full md:w-3/4 space-y-4">
+      <div className="h-screen flex flex-col items-center justify-start bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 lg:px-8 pt-16">
+        <motion.div
+          className="w-full max-w-4xl flex-1 flex flex-col"
+          initial="hidden"
+          animate="visible"
+          variants={cardVariants}
+        >
+          <Card className="bg-white dark:bg-gray-800 shadow-xl flex-1 flex flex-col">
+            <CardHeader>
+              <CardTitle className="text-blue-500 dark:text-blue-400 text-2xl sm:text-3xl font-bold">
+                ChatSphere
+              </CardTitle>
+              <p className="text-gray-700 dark:text-gray-300 text-sm sm:text-base">
+                Welcome, {user.username}!
+              </p>
+            </CardHeader>
+            <CardContent className="flex-1 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
               {(authError || error) && (
-                <p key={authError || error} className="text-red-500">
+                <p className="text-red-500 text-center text-sm">
                   {authError || error}
                 </p>
               )}
-              <MessageList messages={messages} selectedUser={selectedUser} />
-              <MessageInput
-                selectedUser={selectedUser}
-                onSendMessage={handleSendMessage}
-              />
-              <p className="mt-4 text-center">
-                View your{" "}
-                <a href="/profile" className="text-blue-500 hover:underline">
-                  Profile
-                </a>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="w-full md:w-1/3">
+                <UserList
+                  users={users}
+                  selectedUser={selectedUser}
+                  setSelectedUser={setSelectedUser}
+                />
+              </div>
+              <div className="w-full md:w-2/3 flex flex-col space-y-4 flex-1">
+                <MessageList
+                  messages={messages}
+                  selectedUser={selectedUser}
+                  typingUser={typingUser}
+                />
+                <div className="sticky bottom-0 bg-white dark:bg-gray-800">
+                  <MessageInput
+                    selectedUser={selectedUser}
+                    onSendMessage={handleSendMessage}
+                    socket={socketRef.current}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </ProtectedRoute>
   );

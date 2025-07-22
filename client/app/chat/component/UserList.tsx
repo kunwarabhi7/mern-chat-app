@@ -2,13 +2,7 @@
 "use client";
 
 import { User } from "@/types";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion } from "framer-motion";
 
 interface UserListProps {
@@ -22,43 +16,50 @@ export default function UserList({
   selectedUser,
   setSelectedUser,
 }: UserListProps) {
-  // Animation variants
-  const selectVariants = {
-    hover: { scale: 1.02, transition: { duration: 0.2 } },
+  const handleUserClick = (user: User) => {
+    console.log("Selected user:", user);
+    setSelectedUser(user);
+  };
+
+  const userVariants = {
+    hover: { scale: 1.02 },
+    tap: { scale: 0.98 },
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <Select
-        onValueChange={(value) => {
-          const user = users.find((u) => u.id === value) || null;
-          console.log("Selected user:", user);
-          setSelectedUser(user);
-        }}
-        value={selectedUser?.id || ""}
-        disabled={!users.length}
-      >
-        <SelectTrigger className="bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400">
-          <SelectValue placeholder="Select a user to chat with" />
-        </SelectTrigger>
-        <SelectContent>
-          {users.map((user) => (
-            <motion.div
-              key={user.id}
-              variants={selectVariants}
-              whileHover="hover"
-            >
-              <SelectItem value={user.id}>
-                {user.username} ({user.email})
-              </SelectItem>
-            </motion.div>
-          ))}
-        </SelectContent>
-      </Select>
-    </motion.div>
+    <ScrollArea className="h-[50vh] border border-gray-300 dark:border-gray-600 p-4 rounded-md bg-gray-100 dark:bg-gray-700">
+      {users.length > 0 ? (
+        users.map((user) => (
+          <motion.div
+            key={user.id}
+            className={`p-2 mb-2 rounded-md cursor-pointer flex items-center space-x-2 ${
+              selectedUser?.id === user.id
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100"
+            }`}
+            onClick={() => handleUserClick(user)}
+            variants={userVariants}
+            whileHover="hover"
+            whileTap="tap"
+          >
+            <div
+              className={`w-3 h-3 rounded-full ${
+                user.isOnline ? "bg-green-500" : "bg-gray-500"
+              }`}
+            />
+            <div>
+              <p className="text-sm sm:text-base">{user.username}</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                {user.email}
+              </p>
+            </div>
+          </motion.div>
+        ))
+      ) : (
+        <p className="text-gray-600 dark:text-gray-400 text-center text-sm">
+          No users available.
+        </p>
+      )}
+    </ScrollArea>
   );
 }
