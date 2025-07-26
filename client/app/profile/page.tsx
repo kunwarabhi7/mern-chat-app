@@ -178,12 +178,12 @@ export default function Profile() {
                 >
                   {loading ? "Uploading..." : "Update DP"}
                 </Button>
-                <Link
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-                  href="/chat"
+                <Button
+                  asChild
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 text-base sm:text-lg"
                 >
-                  Go to Chat
-                </Link>
+                  <Link href="/chat">Go to Chat</Link>
+                </Button>
               </form>
             </CardContent>
           </Card>

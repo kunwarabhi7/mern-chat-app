@@ -97,6 +97,8 @@ export default function ChatPage() {
       setError(data.message);
     });
 
+    console.log(users, "userssss");
+
     return () => {
       socket.disconnect();
       socket.off();
@@ -118,6 +120,7 @@ export default function ChatPage() {
             username: u.username,
             email: u.email,
             isOnline: false,
+            dp: u.dp,
           }))
         );
       } catch (err: any) {

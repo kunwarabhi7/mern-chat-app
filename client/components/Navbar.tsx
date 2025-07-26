@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DarkModeToggle } from "./DarkModeToggle";
 import { motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, MessageSquare, X } from "lucide-react";
 import socket from "@/lib/socket";
 
 export function Navbar() {
@@ -69,9 +69,11 @@ export function Navbar() {
           href="/"
           className="text-2xl font-extrabold text-blue-500 dark:text-blue-400"
         >
-          ChatSphere
+          <div className="flex items-center justify-center space-x-4">
+            <span>ChatApp</span>
+            <MessageSquare />
+          </div>
         </Link>
-
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-4">
           {user ? (
