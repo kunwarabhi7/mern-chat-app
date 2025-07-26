@@ -127,7 +127,7 @@ export default function ChatPage() {
                 <span>ChatApp - {user.username}</span>
               </div>
               <img
-                src={user?.dp}
+                src={user?.dp ?? undefined}
                 alt={user.username}
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
               />
