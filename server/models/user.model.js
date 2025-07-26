@@ -20,6 +20,10 @@ const userSchema = new mongoose.Schema(
       trim: true,
       match: [/.+@.+\..+/, "Please enter a valid email address"],
     },
+    dp: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );

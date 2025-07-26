@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import BlackList from "../models/Blacklist.js";
+import BlackList from "../models/Blacklist.model.js";
 
 const authMiddleware = async (req, res, next) => {
   // Ensure cookie-parser is working

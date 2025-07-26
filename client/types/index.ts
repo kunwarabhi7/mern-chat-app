@@ -3,6 +3,7 @@ export interface User {
   username: string;
   email: string;
   isOnline?: boolean;
+  dp?: string | null;
 }
 
 export interface Message {
@@ -12,6 +13,7 @@ export interface Message {
   content?: string;
   sticker?: string;
   createdAt: string;
+  dp?: string | null;
 }
 
 export interface MessageListProps {

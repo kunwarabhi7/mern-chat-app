@@ -7,7 +7,7 @@ import connectToDB from "./utils/connectToDB.js";
 import { UserRouter } from "./routes/user.route.js";
 import { MessageRouter } from "./routes/message.route.js";
 import { setupSocket } from "./utils/Socket.js";
-
+import path from "path";
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
@@ -15,7 +15,7 @@ const app = express();
 const server = createServer(app);
 
 //Initialize app
-setupSocket(server);
+const io = setupSocket(server, app);
 
 // cors
 app.use(
@@ -28,6 +28,7 @@ app.use(
 );
 
 //middlewares
+app.use("/uploads", express.static(path.join("uploads")));
 app.use(express.json());
 app.use(cookieParser());
 

@@ -2,9 +2,9 @@
 import { Server } from "socket.io";
 import Message from "../models/message.model.js";
 
-const onlineUsers = new Map(); // Map<userId, socketId>
+const onlineUsers = new Map();
 
-export const setupSocket = (server) => {
+export const setupSocket = (server, app) => {
   const io = new Server(server, {
     cors: {
       origin: "http://localhost:3000",
@@ -13,10 +13,12 @@ export const setupSocket = (server) => {
     },
   });
 
+  // Make io accessible in routes
+  app.set("io", io);
+
   io.on("connection", (socket) => {
     console.log("New client connected:", socket.id);
 
-    // Handle user joining
     socket.on("join", (userId) => {
       console.log(`User ${userId} joined`);
       socket.join(userId);
@@ -25,19 +27,16 @@ export const setupSocket = (server) => {
       io.emit("onlineUsers", Array.from(onlineUsers.keys()));
     });
 
-    // Handle typing event
     socket.on("typing", ({ senderId, recipientId }) => {
       console.log(`User ${senderId} is typing to ${recipientId}`);
       io.to(recipientId).emit("typing", { senderId });
     });
 
-    // Handle stop typing event
     socket.on("stopTyping", ({ senderId, recipientId }) => {
       console.log(`User ${senderId} stopped typing to ${recipientId}`);
       io.to(recipientId).emit("stopTyping", { senderId });
     });
 
-    // Handle sending messages
     socket.on("sendMessage", async (messageData) => {
       try {
         console.log("Received message data:", messageData);
@@ -57,8 +56,8 @@ export const setupSocket = (server) => {
         await message.save();
 
         const populatedMessage = await Message.findById(message._id)
-          .populate("sender", "username email")
-          .populate("recipient", "username email");
+          .populate("sender", "username email dp")
+          .populate("recipient", "username email dp");
 
         io.to(senderId)
           .to(recipientId)
@@ -70,7 +69,6 @@ export const setupSocket = (server) => {
       }
     });
 
-    // Handle disconnection
     socket.on("disconnect", () => {
       console.log("Client disconnected:", socket.id);
       for (const [userId, socketId] of onlineUsers.entries()) {

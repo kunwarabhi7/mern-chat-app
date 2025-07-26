@@ -26,6 +26,8 @@ export default function UserList({
     tap: { scale: 0.98 },
   };
 
+  console.log(users, "users");
+
   return (
     <ScrollArea className="h-[50vh] border border-gray-300 dark:border-gray-600 p-4 rounded-md bg-gray-100 dark:bg-gray-700">
       {users.length > 0 ? (
@@ -42,13 +44,20 @@ export default function UserList({
             whileHover="hover"
             whileTap="tap"
           >
-            <div
-              className={`w-3 h-3 rounded-full ${
-                user.isOnline ? "bg-green-500" : "bg-gray-500"
-              }`}
+            <img
+              src={user.dp || "/images/default-dp.png"}
+              alt={user.username}
+              className="w-8 h-8 rounded-full object-cover"
             />
-            <div>
-              <p className="text-sm sm:text-base">{user.username}</p>
+            <div className="flex-1">
+              <div className="flex items-center space-x-2">
+                <p className="text-sm sm:text-base">{user.username}</p>
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    user.isOnline ? "bg-green-500" : "bg-gray-500"
+                  }`}
+                />
+              </div>
               <p className="text-xs text-gray-600 dark:text-gray-400">
                 {user.email}
               </p>

@@ -1,7 +1,8 @@
 import User from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import BlackList from "../models/Blacklist.js";
+import BlackList from "../models/Blacklist.model.js";
+import fs from "fs";
 
 dotenv.config();
 
@@ -85,7 +86,12 @@ export const getCurrentUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     res.status(200).json({
-      user: { id: user._id, username: user.username, email: user.email },
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        dp: user.dp,
+      },
     });
   } catch (error) {
     console.error("Error in /user/me:", error.message);
@@ -123,11 +129,70 @@ export const logout = async (req, res) => {
 export const getAllUser = async (req, res) => {
   try {
     const user = await User.find({ _id: { $ne: req.user.id } }).select(
-      "username email"
+      "username email dp"
     );
     res.status(200).json({ user });
   } catch (error) {
     console.error("Error fetching users:", error.message);
     res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const uploadDP = async (req, res) => {
+  try {
+    console.log("DP upload request:", {
+      body: req.body,
+      file: req.file,
+      user: req.user,
+    });
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Delete existing dp if exists
+    if (user.dp) {
+      try {
+        const oldDpPath = path.join("uploads", path.basename(user.dp));
+        if (fs.existsSync(oldDpPath)) {
+          fs.unlinkSync(oldDpPath);
+          console.log("Old DP deleted:", oldDpPath);
+        }
+      } catch (error) {
+        console.error("Error deleting old DP:", error.message);
+      }
+    }
+
+    // Save new dp
+    user.dp = `/uploads/${req.file.filename}`;
+    await user.save();
+    console.log("New DP saved:", user.dp);
+
+    // Emit userUpdated event via Socket.IO
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("userUpdated", {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        dp: user.dp,
+      });
+      console.log("Emitted userUpdated event for user:", user._id);
+    } else {
+      console.error("Socket.IO instance not found");
+    }
+
+    res.status(200).json({ message: "DP updated successfully", dp: user.dp });
+  } catch (error) {
+    console.error("Error uploading DP:", error.message, error.stack);
+    res
+      .status(500)
+      .json({ message: "Failed to upload DP", error: error.message });
   }
 };

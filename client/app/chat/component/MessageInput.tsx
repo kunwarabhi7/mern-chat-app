@@ -19,7 +19,7 @@ const EmojiPicker = dynamic(
 interface MessageInputProps {
   selectedUser: User | null;
   onSendMessage: (content: string, sticker?: string) => void;
-  socket: Socket | null; // Add socket prop
+  socket: Socket | null;
 }
 
 export default function MessageInput({
@@ -48,7 +48,6 @@ export default function MessageInput({
       console.log("Submitting message:", messageInput);
       onSendMessage(messageInput);
       setMessageInput("");
-      // Emit stopTyping when message is sent
       if (user && selectedUser) {
         socket?.emit("stopTyping", {
           senderId: user.id,
@@ -62,7 +61,6 @@ export default function MessageInput({
     console.log("Selected sticker:", emojiData.emoji);
     onSendMessage("", emojiData.emoji);
     setShowStickerPicker(false);
-    // Emit stopTyping when sticker is sent
     if (user && selectedUser) {
       socket?.emit("stopTyping", {
         senderId: user.id,
@@ -75,15 +73,12 @@ export default function MessageInput({
     setMessageInput(e.target.value);
     if (!user || !selectedUser) return;
 
-    // Emit typing event
     socket?.emit("typing", { senderId: user.id, recipientId: selectedUser.id });
 
-    // Clear previous timeout
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
-    // Set timeout to emit stopTyping after 2 seconds of inactivity
     typingTimeoutRef.current = setTimeout(() => {
       socket?.emit("stopTyping", {
         senderId: user.id,
@@ -94,7 +89,6 @@ export default function MessageInput({
 
   useEffect(() => {
     console.log("Sticker picker visible:", showStickerPicker);
-    // Cleanup timeout on unmount
     return () => {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);

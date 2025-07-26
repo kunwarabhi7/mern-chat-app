@@ -1,8 +1,7 @@
-// components/Navbar.tsx
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/Auth.Context";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,10 +13,27 @@ import {
 import { DarkModeToggle } from "./DarkModeToggle";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import socket from "@/lib/socket";
 
 export function Navbar() {
-  const { logout, loading, error, user } = useAuth();
+  const { logout, loading, user, setUser } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Handle userUpdated event for real-time DP update
+  useEffect(() => {
+    if (!user) return;
+
+    socket.on("userUpdated", (updatedUser) => {
+      console.log("Received userUpdated event in Navbar:", updatedUser);
+      if (updatedUser.id === user.id) {
+        setUser({ ...user, dp: updatedUser.dp });
+      }
+    });
+
+    return () => {
+      socket.off("userUpdated");
+    };
+  }, [user, setUser]);
 
   // Animation variants
   const navVariants = {
@@ -53,15 +69,24 @@ export function Navbar() {
           href="/"
           className="text-2xl font-extrabold text-blue-500 dark:text-blue-400"
         >
-          ChatApp
+          ChatSphere
         </Link>
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-4">
           {user ? (
             <>
-              <span className="text-gray-700 dark:text-gray-300 text-sm sm:text-base">
-                Welcome, {user.username}
+              <span className="text-gray-700 dark:text-gray-300 flex items-center gap-2 text-sm sm:text-base">
+                <span>Welcome, {user.username}</span>
+                <img
+                  className="w-12 h-12 rounded-full object-cover"
+                  src={
+                    user.dp
+                      ? `http://localhost:5000${user.dp}`
+                      : "/images/default-dp.png"
+                  }
+                  alt={user.username || "Profile"}
+                />
               </span>
               <motion.div
                 variants={buttonVariants}
@@ -129,7 +154,7 @@ export function Navbar() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                size="icon"
+                size="sm"
                 className="text-blue-500 dark:text-blue-400"
               >
                 {isMenuOpen ? (
@@ -139,24 +164,40 @@ export function Navbar() {
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
+            <DropdownMenuContent
+              className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 w-56 p-2"
+              align="end"
+            >
               {user ? (
                 <>
-                  <DropdownMenuItem className="text-gray-700 dark:text-gray-300">
-                    Welcome, {user.username}
+                  <DropdownMenuItem
+                    className="flex items-center gap-3 text-gray-700 dark:text-gray-300 px-3 py-2 text-sm font-medium rounded-md"
+                    disabled
+                  >
+                    <img
+                      className="w-8 h-8 rounded-full object-cover"
+                      src={
+                        user.dp
+                          ? `http://localhost:5000${user.dp}`
+                          : "/images/default-dp.png"
+                      }
+                      alt={user.username || "Profile"}
+                    />
+                    <span>Welcome, {user.username}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link
                       href="/profile"
-                      className="text-blue-500 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900"
+                      className="flex  items-center justify-center w-full text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-700 px-3 py-2 rounded-md"
+                      onClick={() => setIsMenuOpen(false)}
                     >
                       Profile
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Button
                       variant="ghost"
-                      className="w-full text-blue-500 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900"
+                      className="flex items-start justify-center  w-full text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-700 px-3 py-2 rounded-md"
                       onClick={handleLogout}
                       disabled={loading}
                     >
@@ -169,7 +210,8 @@ export function Navbar() {
                   <DropdownMenuItem asChild>
                     <Link
                       href="/login"
-                      className="text-blue-500 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900"
+                      className="flex items-center w-full text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-700 px-3 py-2 rounded-md"
+                      onClick={() => setIsMenuOpen(false)}
                     >
                       Login
                     </Link>
@@ -177,14 +219,15 @@ export function Navbar() {
                   <DropdownMenuItem asChild>
                     <Link
                       href="/signup"
-                      className="text-blue-500 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900"
+                      className="flex items-center w-full text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-700 px-3 py-2 rounded-md"
+                      onClick={() => setIsMenuOpen(false)}
                     >
                       Signup
                     </Link>
                   </DropdownMenuItem>
                 </>
               )}
-              <DropdownMenuItem>
+              <DropdownMenuItem className="flex items-center justify-center px-3 py-2">
                 <DarkModeToggle />
               </DropdownMenuItem>
             </DropdownMenuContent>

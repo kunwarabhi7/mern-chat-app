@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 interface MessageListProps {
   messages: Message[];
   selectedUser: User | null;
-  typingUser: string | null; // Add typingUser prop
+  typingUser: string | null;
 }
 
 export default function MessageList({
@@ -50,7 +50,7 @@ export default function MessageList({
           messages.map((msg) => (
             <motion.div
               key={msg._id}
-              className={`mb-2 p-2 rounded-md ${
+              className={`mb-2 p-2 rounded-md flex items-start space-x-2 ${
                 msg.sender._id === user?.id
                   ? "ml-auto bg-blue-500 text-white"
                   : "mr-auto bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100"
@@ -59,16 +59,23 @@ export default function MessageList({
               initial="hidden"
               animate="visible"
             >
-              <p className="text-xs sm:text-sm">
-                <strong>{msg.sender.username}</strong> (
-                {new Date(msg.createdAt).toLocaleTimeString()})
-              </p>
-              {msg.content && (
-                <p className="text-sm sm:text-base">{msg.content}</p>
-              )}
-              {msg.sticker && (
-                <p className="text-2xl sm:text-3xl">{msg.sticker}</p>
-              )}
+              <img
+                src={msg.sender.dp || "/images/default-dp.png"}
+                alt={msg.sender.username}
+                className="w-6 h-6 rounded-full object-cover"
+              />
+              <div>
+                <p className="text-xs sm:text-sm">
+                  <strong>{msg.sender.username}</strong> (
+                  {new Date(msg.createdAt).toLocaleTimeString()})
+                </p>
+                {msg.content && (
+                  <p className="text-sm sm:text-base">{msg.content}</p>
+                )}
+                {msg.sticker && (
+                  <p className="text-2xl sm:text-3xl">{msg.sticker}</p>
+                )}
+              </div>
             </motion.div>
           ))
         ) : (

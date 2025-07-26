@@ -1,72 +1,134 @@
-// app/profile/page.tsx
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/Auth.Context";
-import { useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { motion } from "framer-motion";
+import axios from "axios";
+import socket from "@/lib/socket";
+import Link from "next/link";
 
 export default function Profile() {
-  const { user, loading, logout, error: authError, clearError } = useAuth();
-  const router = useRouter();
+  const { user, setUser } = useAuth();
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // Animation variants
+  useEffect(() => {
+    socket.on("userUpdated", (updatedUser) => {
+      console.log("Received userUpdated event:", updatedUser);
+      if (user && updatedUser.id === user.id) {
+        // Type guard: ensure user is not null
+        setUser({
+          ...user,
+          dp: updatedUser.dp,
+        });
+      }
+    });
+
+    return () => {
+      socket.off("userUpdated");
+    };
+  }, [user, setUser]);
+
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
-  const buttonVariants = {
-    hover: { scale: 1.05, transition: { duration: 0.2 } },
-    tap: { scale: 0.95 },
-  };
 
-  // Log profile page state and clear errors
-  useEffect(() => {
-    console.log("Profile page check:", { user, loading, authError });
-    clearError(); // Clear any leftover errors
-  }, [user, loading, authError, clearError]);
-
-  const handleLogout = async () => {
-    try {
-      console.log("Triggering logout...");
-      await logout();
-      router.push("/login");
-    } catch (err: any) {
-      console.error("Logout failed:", err.message);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      if (!["image/jpeg", "image/png"].includes(selectedFile.type)) {
+        setError("Only JPEG or PNG images are allowed");
+        setFile(null);
+        setPreview(null);
+        return;
+      }
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        setError("File size must be less than 5MB");
+        setFile(null);
+        setPreview(null);
+        return;
+      }
+      setFile(selectedFile);
+      setPreview(URL.createObjectURL(selectedFile));
+      setError(null);
+      console.log("Selected file:", {
+        name: selectedFile.name,
+        type: selectedFile.type,
+        size: selectedFile.size,
+      });
+    } else {
+      setFile(null);
+      setPreview(null);
+      setError("No file selected");
     }
   };
 
-  if (loading) {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!file) {
+      setError("Please select an image");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("dp", file);
+    console.log("FormData contents:", [...formData.entries()]);
+
+    try {
+      setLoading(true);
+      setError(null);
+      console.log("Uploading DP...");
+      const token = localStorage.getItem("token");
+      const { data } = await axios.post(
+        "http://localhost:5000/api/user/dp",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+          withCredentials: true,
+        }
+      );
+      if (user) {
+        // Type guard: ensure user is not null
+        setUser({ ...user, dp: data.dp });
+      }
+      setFile(null);
+      setPreview(null);
+      console.log("DP updated:", data.dp);
+    } catch (err: any) {
+      console.error("Error uploading DP:", err.message, err.response?.data);
+      setError(err.response?.data?.message || "Failed to upload DP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
+
+  if (!user) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300">
-        Loading...
+        Please log in
       </div>
     );
   }
 
   return (
     <ProtectedRoute>
-      <div className="h-[95vh] flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 lg:px-8 pt-16 overflow-hidden">
-        {/* Hero Section */}
-        <motion.div
-          className="text-center mb-4 sm:mb-6"
-          initial="hidden"
-          animate="visible"
-          variants={cardVariants}
-        >
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-blue-500 dark:text-blue-400 mb-2 sm:mb-4">
-            Your Profile
-          </h1>
-          <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300 mb-4 sm:mb-6">
-            Manage your account and connect with friends on ChatSphere!
-          </p>
-        </motion.div>
-
-        {/* Card Section */}
+      <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 lg:px-8 pt-16">
         <motion.div
           className="w-full max-w-md"
           initial="hidden"
@@ -75,62 +137,54 @@ export default function Profile() {
         >
           <Card className="bg-white dark:bg-gray-800 shadow-xl">
             <CardHeader>
-              <CardTitle className="text-blue-500 dark:text-blue-400 text-2xl sm:text-3xl font-bold text-center">
-                Profile Details
+              <CardTitle className="text-blue-500 dark:text-blue-400 text-2xl sm:text-3xl font-bold">
+                Profile
               </CardTitle>
+              <p className="text-gray-700 dark:text-gray-300 text-sm sm:text-base">
+                Update your profile picture
+              </p>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {authError && (
-                <p className="text-red-500 text-center text-sm">{authError}</p>
-              )}
-              {user ? (
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-gray-700 dark:text-gray-300 text-sm sm:text-base">
-                      <strong>Username:</strong> {user.username}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-700 dark:text-gray-300 text-sm sm:text-base">
-                      <strong>Email:</strong> {user.email}
-                    </p>
-                  </div>
-                  <motion.div
-                    variants={buttonVariants}
-                    whileHover="hover"
-                    whileTap="tap"
-                  >
-                    <Button
-                      onClick={handleLogout}
-                      className="w-full bg-red-500 hover:bg-red-600 text-white py-2 text-base sm:text-lg"
-                      disabled={loading}
-                    >
-                      Logout
-                    </Button>
-                  </motion.div>
-                  <motion.div
-                    variants={buttonVariants}
-                    whileHover="hover"
-                    whileTap="tap"
-                  >
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="w-full border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white py-2 text-base sm:text-lg"
-                    >
-                      <Link href="/chat">Back to Chat</Link>
-                    </Button>
-                  </motion.div>
-                </div>
-              ) : (
-                <p className="text-gray-700 dark:text-gray-300 text-center">
-                  No user data available. Please{" "}
-                  <Link href="/login" className="text-blue-500 hover:underline">
-                    log in
-                  </Link>
-                  .
-                </p>
-              )}
+            <CardContent>
+              {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+              <div className="flex justify-center mb-4">
+                <img
+                  src={
+                    preview ||
+                    (user.dp
+                      ? `http://localhost:5000${user.dp}`
+                      : "/images/default-dp.png")
+                  }
+                  alt="Profile"
+                  className="w-24 h-24 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
+                />
+              </div>
+              <form
+                onSubmit={handleSubmit}
+                encType="multipart/form-data"
+                className="space-y-4"
+              >
+                <Input
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  name="dp"
+                  onChange={handleFileChange}
+                  className="text-sm"
+                  required
+                />
+                <Button
+                  type="submit"
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                  disabled={loading || !file}
+                >
+                  {loading ? "Uploading..." : "Update DP"}
+                </Button>
+                <Link
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                  href="/chat"
+                >
+                  Go to Chat
+                </Link>
+              </form>
             </CardContent>
           </Card>
         </motion.div>

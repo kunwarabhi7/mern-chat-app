@@ -1,4 +1,3 @@
-// context/Auth.Context.tsx
 "use client";
 
 import {
@@ -9,22 +8,19 @@ import {
   ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import axios, { AxiosError } from "axios";
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-}
+import axios from "axios";
+import { User } from "@/types";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
   error: string | null;
   signup: (username: string, email: string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
+  getAllUsers: () => Promise<User[]>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,7 +49,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!error.response) {
         setError("Network error: Server unreachable");
       } else if (error.response.status === 401) {
-        // Only set error for specific 401 cases, not "No token provided"
         if (
           error.response.data.message !== "No token provided" &&
           error.response.data.message !== "Token expired" &&
@@ -75,9 +70,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         console.log("Checking session...");
         setLoading(true);
-        const { data } = await api.get("/user/me");
+        const token = localStorage.getItem("token");
+        if (!token) {
+          console.log("No token found in localStorage");
+          setUser(null);
+          return;
+        }
+        const { data } = await api.get("/user/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         console.log("Session check response:", data);
-        setUser(data.user);
+        setUser({
+          id: data.user.id,
+          username: data.user.username,
+          email: data.user.email,
+          dp: data.user.dp || "/images/default-dp.png",
+        });
       } catch (err: any) {
         console.error("Session check error:", {
           message: err.message,
@@ -85,7 +95,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           data: err.response?.data,
         });
         setUser(null);
-        // Suppress 401 errors for "No token provided" and similar
         if (
           err.response?.status !== 401 ||
           (err.response?.data?.message !== "No token provided" &&
@@ -118,7 +127,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password,
       });
       console.log("Signup response:", data);
-      setUser(data.user);
+      localStorage.setItem("token", data.token);
+      setUser({
+        id: data.user.id,
+        username: data.user.username,
+        email: data.user.email,
+        dp: data.user.dp || "/images/default-dp.png",
+      });
       router.push("/chat");
     } catch (err: any) {
       console.error("Signup error:", {
@@ -140,7 +155,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setError(null);
       const { data } = await api.post("/user/login", { email, password });
       console.log("Login response:", data);
-      setUser(data.user);
+      localStorage.setItem("token", data.token);
+      setUser({
+        id: data.user.id,
+        username: data.user.username,
+        email: data.user.email,
+        dp: data.user.dp || "/images/default-dp.png",
+      });
       router.push("/chat");
     } catch (err: any) {
       console.error("Login error:", {
@@ -161,8 +182,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       setError(null);
       console.log("Initiating logout...");
-      const response = await api.post("/user/logout");
+      const token = localStorage.getItem("token");
+      const response = await api.post("/user/logout", null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       console.log("Logout response:", response.data);
+      localStorage.removeItem("token");
       setUser(null);
       router.push("/login");
     } catch (err: any) {
@@ -179,9 +206,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const getAllUsers = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const { data } = await api.get("/user/list", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("Get all users response:", data);
+      return data.user.map((u: any) => ({
+        id: u._id,
+        username: u.username,
+        email: u.email,
+        dp: u.dp || "/images/default-dp.png",
+        isOnline: false,
+      }));
+    } catch (err: any) {
+      console.error("Get all users error:", {
+        message: err.message,
+        status: err.response?.status,
+        data: err.response?.data,
+      });
+      setError(err.response?.data?.message || "Failed to fetch users");
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, loading, error, signup, login, logout, clearError }}
+      value={{
+        user,
+        loading,
+        error,
+        signup,
+        login,
+        logout,
+        clearError,
+        setUser,
+        getAllUsers,
+      }}
     >
       {children}
     </AuthContext.Provider>

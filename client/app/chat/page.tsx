@@ -14,7 +14,12 @@ import MessageInput from "./component/MessageInput";
 import { motion } from "framer-motion";
 
 export default function ChatPage() {
-  const { user, loading: authLoading, error: authError } = useAuth();
+  const {
+    user,
+    getAllUsers,
+    loading: authLoading,
+    error: authError,
+  } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -22,7 +27,6 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [typingUser, setTypingUser] = useState<string | null>(null); // Track typing user
   const socketRef = useRef<Socket | null>(null);
-
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
