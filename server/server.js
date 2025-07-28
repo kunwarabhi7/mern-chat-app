@@ -6,8 +6,8 @@ import { createServer } from "http";
 import connectToDB from "./utils/connectToDB.js";
 import { UserRouter } from "./routes/user.route.js";
 import { MessageRouter } from "./routes/message.route.js";
-import { setupSocket } from "./utils/Socket.js";
 import path from "path";
+import { setupSocket } from "./utils/socket.js";
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
