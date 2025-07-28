@@ -21,14 +21,17 @@ export default function Chat() {
   const socketRef = useRef<Socket | null>(null);
 
   const api = axios.create({
-    baseURL: "http://localhost:5000/api",
+    baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
     withCredentials: true,
   });
 
   useEffect(() => {
     if (!user) return;
 
-    const socket = io("http://localhost:5000", { withCredentials: true });
+    const socket = io(
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000",
+      { withCredentials: true }
+    );
     socketRef.current = socket;
 
     socket.on("connect", () => {
@@ -181,7 +184,8 @@ export default function Chat() {
               <img
                 src={
                   user.dp
-                    ? `http://localhost:5000${user.dp}`
+                    ? `https://mern-chat-app-7vt2.onrender.com${user.dp}` ||
+                      `http://localhost:5000${user.dp}`
                     : "/images/default-dp.png"
                 }
                 alt={user.username}
