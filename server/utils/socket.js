@@ -1,4 +1,3 @@
-// utils/Socket.js
 import { Server } from "socket.io";
 import Message from "../models/message.model.js";
 
@@ -13,13 +12,17 @@ export const setupSocket = (server, app) => {
     },
   });
 
-  // Make io accessible in routes
   app.set("io", io);
 
   io.on("connection", (socket) => {
     console.log("New client connected:", socket.id);
 
     socket.on("join", (userId) => {
+      if (!userId) {
+        console.error("Join failed: No userId provided");
+        socket.emit("error", { message: "User ID required" });
+        return;
+      }
       console.log(`User ${userId} joined`);
       socket.join(userId);
       onlineUsers.set(userId, socket.id);
@@ -28,11 +31,21 @@ export const setupSocket = (server, app) => {
     });
 
     socket.on("typing", ({ senderId, recipientId }) => {
+      if (!senderId || !recipientId) {
+        console.error("Typing event failed:", { senderId, recipientId });
+        socket.emit("error", { message: "Invalid sender or recipient ID" });
+        return;
+      }
       console.log(`User ${senderId} is typing to ${recipientId}`);
       io.to(recipientId).emit("typing", { senderId });
     });
 
     socket.on("stopTyping", ({ senderId, recipientId }) => {
+      if (!senderId || !recipientId) {
+        console.error("StopTyping event failed:", { senderId, recipientId });
+        socket.emit("error", { message: "Invalid sender or recipient ID" });
+        return;
+      }
       console.log(`User ${senderId} stopped typing to ${recipientId}`);
       io.to(recipientId).emit("stopTyping", { senderId });
     });

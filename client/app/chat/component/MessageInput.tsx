@@ -1,4 +1,3 @@
-// app/chat/component/MessageInput.tsx
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -49,6 +48,10 @@ export default function MessageInput({
       onSendMessage(messageInput);
       setMessageInput("");
       if (user && selectedUser) {
+        console.log("Emitting stopTyping:", {
+          senderId: user.id,
+          recipientId: selectedUser.id,
+        });
         socket?.emit("stopTyping", {
           senderId: user.id,
           recipientId: selectedUser.id,
@@ -62,6 +65,10 @@ export default function MessageInput({
     onSendMessage("", emojiData.emoji);
     setShowStickerPicker(false);
     if (user && selectedUser) {
+      console.log("Emitting stopTyping:", {
+        senderId: user.id,
+        recipientId: selectedUser.id,
+      });
       socket?.emit("stopTyping", {
         senderId: user.id,
         recipientId: selectedUser.id,
@@ -70,17 +77,27 @@ export default function MessageInput({
   };
 
   const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMessageInput(e.target.value);
-    if (!user || !selectedUser) return;
+    const value = e.target.value;
+    setMessageInput(value);
+    if (!socket || !selectedUser || !user) return;
 
-    socket?.emit("typing", { senderId: user.id, recipientId: selectedUser.id });
+    console.log("Emitting typing:", {
+      senderId: user.id,
+      recipientId: selectedUser.id,
+    });
+    socket.emit("typing", {
+      senderId: user.id,
+      recipientId: selectedUser.id,
+    });
 
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
     typingTimeoutRef.current = setTimeout(() => {
-      socket?.emit("stopTyping", {
+      console.log("Emitting stopTyping:", {
+        senderId: user.id,
+        recipientId: selectedUser.id,
+      });
+      socket.emit("stopTyping", {
         senderId: user.id,
         recipientId: selectedUser.id,
       });

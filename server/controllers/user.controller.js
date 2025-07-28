@@ -45,12 +45,12 @@ export const SignUp = async (req, res) => {
 };
 
 export const Login = async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
+  const { username, password } = req.body;
+  if (!username || !password) {
     return res.status(400).json({ message: "All Fields are required" });
   }
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ username });
     if (!user) {
       return res.status(400).json({ message: "InValid credentials" });
     }

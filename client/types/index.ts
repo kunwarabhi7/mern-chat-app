@@ -1,5 +1,5 @@
 export interface User {
-  id: string;
+  id: string; // Single ID field
   username: string;
   email: string;
   isOnline?: boolean;
@@ -8,8 +8,15 @@ export interface User {
 
 export interface Message {
   _id: string;
-  sender: { _id: string; username: string };
-  recipient: { _id: string; username: string };
+  sender: {
+    dp: string;
+    _id: string; // Backend uses `_id`
+    username: string;
+  };
+  recipient: {
+    _id: string;
+    username: string;
+  };
   content?: string;
   sticker?: string;
   createdAt: string;
@@ -18,5 +25,6 @@ export interface Message {
 
 export interface MessageListProps {
   messages: Message[];
-  selectedUser: { id: string; username: string } | null;
+  selectedUser: User | null;
+  typingUser: string | null;
 }

@@ -14,14 +14,22 @@ export default function MessageList({
   typingUser,
 }: MessageListProps) {
   const { user } = useAuth();
+  console.log("typingUser:", typingUser);
+  console.log("selectedUser:", selectedUser);
+  console.log(
+    "Condition check:",
+    typingUser && selectedUser && typingUser === selectedUser.id
+  );
 
   return (
     <div className="flex flex-col gap-2 px-2 py-4 sm:px-4">
-      {typingUser && selectedUser && (
-        <p className="text-xs sm:text-sm italic text-gray-500">
+      {typingUser && selectedUser && typingUser === selectedUser.id && (
+        <p className="text-sm italic text-gray-500">
           {selectedUser.username} is typing...
         </p>
       )}
+      {/* Temporary test to confirm rendering */}
+      {/* <p className="text-sm italic text-gray-500">Test typing indicator</p> */}
 
       {messages.length > 0 ? (
         messages.map((msg) => (

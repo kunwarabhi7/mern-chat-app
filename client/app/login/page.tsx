@@ -11,7 +11,7 @@ import { motion } from "framer-motion";
 
 export default function Login() {
   const { login, loading, error, clearError } = useAuth();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   // Animation variants
@@ -32,7 +32,7 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(email, password);
+      await login(username, password);
     } catch (err) {
       console.error("Login failed:", err);
     }
@@ -83,10 +83,10 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type="username"
+                  placeholder="UserName"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400"
                   disabled={loading}
                 />
@@ -109,7 +109,7 @@ export default function Login() {
                 <Button
                   type="submit"
                   className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 text-base sm:text-lg"
-                  disabled={loading || !email || !password}
+                  disabled={loading || !username || !password}
                 >
                   {loading ? "Logging In..." : "Log In"}
                 </Button>

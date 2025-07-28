@@ -17,7 +17,7 @@ interface AuthContextType {
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   error: string | null;
   signup: (username: string, email: string, password: string) => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
   getAllUsers: () => Promise<User[]>;
@@ -83,7 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
         console.log("Session check response:", data);
         setUser({
-          id: data.user.id,
+          id: data.user._id, // Map _id to id
           username: data.user.username,
           email: data.user.email,
           dp: data.user.dp || "/images/default-dp.png",
@@ -129,7 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log("Signup response:", data);
       localStorage.setItem("token", data.token);
       setUser({
-        id: data.user.id,
+        id: data.user._id, // Map _id to id
         username: data.user.username,
         email: data.user.email,
         dp: data.user.dp || "/images/default-dp.png",
@@ -149,15 +149,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (username: string, password: string) => {
     try {
       setLoading(true);
       setError(null);
-      const { data } = await api.post("/user/login", { email, password });
+      const { data } = await api.post("/user/login", { username, password });
       console.log("Login response:", data);
       localStorage.setItem("token", data.token);
       setUser({
-        id: data.user.id,
+        id: data.user._id, // Map _id to id
         username: data.user.username,
         email: data.user.email,
         dp: data.user.dp || "/images/default-dp.png",
@@ -217,7 +217,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       console.log("Get all users response:", data);
       return data.user.map((u: any) => ({
-        id: u._id,
+        id: u._id, // Map _id to id
         username: u.username,
         email: u.email,
         dp: u.dp || "/images/default-dp.png",
