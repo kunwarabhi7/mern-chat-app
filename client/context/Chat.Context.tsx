@@ -92,9 +92,18 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [user?.id, setUser]);
+  }, [user?.id, setUser, selectedUser]);
 
-  // ✅ Real-time receiveMessage handler (this fixes the delayed message issue)
+  // ✅ Typing indicator timeout
+  useEffect(() => {
+    if (!typingUser) return;
+    const timeout = setTimeout(() => {
+      setTypingUser(null);
+    }, 3000);
+    return () => clearTimeout(timeout);
+  }, [typingUser]);
+
+  // ✅ Real-time receiveMessage handler
   useEffect(() => {
     const socket = socketRef.current;
     if (!socket || !user?.id || !selectedUser?.id) return;
