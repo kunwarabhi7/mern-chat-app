@@ -5,6 +5,7 @@ import { io, Socket } from "socket.io-client";
 import axios from "axios";
 import { useAuth } from "./Auth.Context";
 import { User, Message } from "@/types";
+import socket from "@/lib/socket";
 
 interface ChatContextType {
   users: User[];
@@ -27,7 +28,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const socketRef = useRef<Socket | null>(null);
 
   const api = axios.create({
-    baseURL: "http://localhost:5000/api",
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
     withCredentials: true,
   });
 
@@ -35,12 +36,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!user?.id) return;
 
-    const socket = io("http://localhost:5000", {
-      withCredentials: true,
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    });
     socketRef.current = socket;
 
     socket.on("connect", () => {
@@ -189,10 +184,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
 
-  // ✅ User selection
   const selectUser = (user: User | null) => {
     setSelectedUser(user);
-    setMessages([]); // Clear old messages
+    setMessages([]);
   };
 
   return (
