@@ -30,9 +30,9 @@ export const SignUp = async (req, res) => {
     //Cookies
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 3600000,
+      secure: process.env.NODE_ENV === "production", // ensures HTTPS usage
+      sameSite: "None", // ✅ cross-origin cookie sharing allowed
+      maxAge: 3600000, // 1 hour
     });
 
     res.status(201).json({
@@ -65,10 +65,11 @@ export const Login = async (req, res) => {
     });
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production", // localhost ke liye false hoga
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax", // fix for localhost
       maxAge: 3600000,
     });
+
     return res.status(200).json({
       user: {
         id: user._id,

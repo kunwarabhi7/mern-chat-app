@@ -15,10 +15,7 @@ const PORT = process.env.PORT || 5000;
 const app = express();
 const server = createServer(app);
 
-// Setup Socket.IO
-const io = setupSocket(server, app);
-
-// ✅ CORS CONFIG
+// ✅ CORS FIXED
 const allowedOrigins = [
   "http://localhost:3000",
   "https://abhichatkaro.vercel.app",
@@ -27,16 +24,8 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: allowedOrigins,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
@@ -52,6 +41,8 @@ app.use("/api/message", MessageRouter);
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Route working fine" });
 });
+
+const io = setupSocket(server, app);
 
 // ✅ START SERVER
 const startServer = async () => {

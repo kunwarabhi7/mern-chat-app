@@ -10,8 +10,8 @@ import {
   useMemo,
 } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import { User } from "@/types";
+import axiosInstance from "@/lib/axiosInstance";
 
 interface AuthContextType {
   user: User | null;
@@ -33,13 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
-    withCredentials: true,
-    timeout: 5000,
-  });
-
-  api.interceptors.response.use(
+  axiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
       console.error("API error:", {
@@ -73,7 +67,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log("Checking session...");
       setLoading(true);
-      const { data } = await api.get("/user/me");
+      const { data } = await axiosInstance.get("/user/me");
+
       if (!data.user?.id) throw new Error("Invalid user ID");
 
       setUser({
@@ -117,7 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
       clearError();
-      const { data } = await api.post("/user/signup", {
+      const { data } = await axiosInstance.post("/user/signup", {
         username,
         email,
         password,
@@ -149,7 +144,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
       clearError();
-      const { data } = await api.post("/user/login", { username, password });
+      const { data } = await axiosInstance.post("/user/login", {
+        username,
+        password,
+      });
       if (!data.user?.id) throw new Error("Invalid user ID in login response");
 
       setUser({
@@ -177,8 +175,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
       clearError();
-      const response = await api.post("/user/logout");
-      console.log("Logout response:", response.data);
+      await axiosInstance.post("/user/logout");
       setUser(null);
       router.push("/login");
     } catch (err: any) {
@@ -198,7 +195,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const getAllUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const { data } = await api.get("/user/list");
+      const { data } = await axiosInstance.get("/user/list");
       if (!data.user) return [];
 
       const mappedUsers = data.user
