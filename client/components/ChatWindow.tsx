@@ -24,9 +24,9 @@ export function ChatWindow({ messages, onSend, currentUser }: ChatWindowProps) {
       <ScrollArea className="flex-1 p-4">
         {messages.map((message) => (
           <MessageBubble
-            key={message.id}
+            key={message._id}
             message={message}
-            isOwnMessage={message.sender === currentUser}
+            isOwnMessage={message.sender._id === currentUser}
           />
         ))}
       </ScrollArea>

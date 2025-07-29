@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import axios from "axios";
-import socket from "@/lib/socket";
 import Link from "next/link";
+import socket from "@/lib/socket";
 
 export default function Profile() {
   const { user, setUser } = useAuth();
