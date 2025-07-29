@@ -20,7 +20,7 @@ const io = setupSocket(server, app);
 // cors
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://mern-chat-app-bice.vercel.app/",
+  "https://abhichatkaro.vercel.app",
 ];
 
 app.use(
