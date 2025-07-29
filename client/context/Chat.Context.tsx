@@ -6,6 +6,7 @@ import axios from "axios";
 import { useAuth } from "./Auth.Context";
 import { User, Message } from "@/types";
 import socket from "@/lib/socket";
+import axiosInstance from "@/lib/axiosInstance";
 
 interface ChatContextType {
   users: User[];
@@ -26,11 +27,6 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [typingUser, setTypingUser] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
-
-  const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL,
-    withCredentials: true,
-  });
 
   // 📦 Socket setup
   useEffect(() => {
@@ -156,9 +152,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     const fetchMessages = async () => {
       try {
         const token = localStorage.getItem("token");
-        const { data } = await api.get(`/message/${selectedUser.id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const { data } = await axiosInstance.get(
+          `/message/${selectedUser.id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (isMounted) setMessages(data.messages || []);
       } catch (err) {
         console.error("Fetch messages error:", err);

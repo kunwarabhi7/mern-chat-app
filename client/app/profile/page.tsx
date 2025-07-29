@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import Link from "next/link";
 import socket from "@/lib/socket";
+import axiosInstance from "@/lib/axiosInstance";
 
 export default function Profile() {
   const { user, setUser } = useAuth();
@@ -86,17 +87,10 @@ export default function Profile() {
       setError(null);
       console.log("Uploading DP...");
       const token = localStorage.getItem("token");
-      const { data } = await axios.post(
-        "http://localhost:5000/api/user/dp",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-          withCredentials: true,
-        }
-      );
+      const { data } = await axiosInstance.post("/user/dp", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
       if (user) {
         // Type guard: ensure user is not null
         setUser({ ...user, dp: data.dp });
