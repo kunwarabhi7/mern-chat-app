@@ -51,15 +51,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!error.response) {
         setError("Network error: Server unreachable");
       } else if (error.response.status === 401) {
+        setUser(null);
         if (
-          error.response.data.message !== "No token provided" &&
-          error.response.data.message !== "Token expired" &&
-          error.response.data.message !== "Invalid token" &&
-          error.response.data.message !== "Token is blacklisted"
+          ![
+            "No token provided",
+            "Token expired",
+            "Invalid token",
+            "Token is blacklisted",
+          ].includes(error.response.data.message)
         ) {
           setError(error.response.data.message || "Unauthorized");
         }
-        setUser(null);
       } else if (error.response.status === 500) {
         setError(error.response.data.message || "Server error occurred");
       }
@@ -71,22 +73,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log("Checking session...");
       setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.log("No token found in localStorage");
-        setUser(null);
-        return;
-      }
-      const { data } = await api.get("/user/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      console.log("Session check response:", data);
-      if (!data.user?.id) {
-        console.error("Invalid user data:", data.user);
-        throw new Error("Invalid user ID");
-      }
+      const { data } = await api.get("/user/me");
+      if (!data.user?.id) throw new Error("Invalid user ID");
+
       setUser({
         id: data.user.id.toString(),
         username: data.user.username,
@@ -102,15 +91,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(null);
       if (
         err.response?.status !== 401 ||
-        (err.response?.data?.message !== "No token provided" &&
-          err.response?.data?.message !== "Token expired" &&
-          err.response?.data?.message !== "Invalid token" &&
-          err.response?.data?.message !== "Token is blacklisted")
+        ![
+          "No token provided",
+          "Token expired",
+          "Invalid token",
+          "Token is blacklisted",
+        ].includes(err.response?.data?.message)
       ) {
         setError(err.response?.data?.message || "Session check failed");
       }
     } finally {
-      console.log("Session check complete, loading:", false);
       setLoading(false);
     }
   };
@@ -120,7 +110,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const clearError = useCallback(() => {
-    console.log("Clearing error state");
     setError(null);
   }, []);
 
@@ -133,11 +122,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         password,
       });
-      console.log("Signup response:", data);
-      if (!data.user?.id) {
-        throw new Error("Invalid user ID in signup response");
-      }
-      localStorage.setItem("token", data.token);
+      if (!data.user?.id) throw new Error("Invalid user ID in signup response");
+
       setUser({
         id: data.user.id.toString(),
         username: data.user.username,
@@ -164,11 +150,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       clearError();
       const { data } = await api.post("/user/login", { username, password });
-      console.log("Login response:", data);
-      if (!data.user?.id) {
-        throw new Error("Invalid user ID in login response");
-      }
-      localStorage.setItem("token", data.token);
+      if (!data.user?.id) throw new Error("Invalid user ID in login response");
+
       setUser({
         id: data.user.id.toString(),
         username: data.user.username,
@@ -194,15 +177,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
       clearError();
-      console.log("Initiating logout...");
-      const token = localStorage.getItem("token");
-      const response = await api.post("/user/logout", null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.post("/user/logout");
       console.log("Logout response:", response.data);
-      localStorage.removeItem("token");
       setUser(null);
       router.push("/login");
     } catch (err: any) {
@@ -220,39 +196,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const getAllUsers = useCallback(async () => {
-    console.log("Calling getAllUsers...");
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("No token found");
-      }
-      const { data } = await api.get("/user/list", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      console.log("Get all users response:", data);
-      if (!data.user) {
-        console.error("No user array in response:", data);
-        return [];
-      }
+      const { data } = await api.get("/user/list");
+      if (!data.user) return [];
+
       const mappedUsers = data.user
-        .map((u: any) => {
-          if (!u.id) {
-            console.error("User missing id:", u);
-            return null;
-          }
-          return {
-            id: u.id,
-            username: u.username || "Unknown",
-            email: u.email || "",
-            dp: u.dp || "/images/default-dp.png",
-            isOnline: false,
-          };
-        })
-        .filter((u: any) => u !== null);
-      console.log("Mapped users:", mappedUsers);
+        .map((u: any) =>
+          u.id
+            ? {
+                id: u.id,
+                username: u.username || "Unknown",
+                email: u.email || "",
+                dp: u.dp || "/images/default-dp.png",
+                isOnline: false,
+              }
+            : null
+        )
+        .filter(Boolean);
+
       return mappedUsers;
     } catch (err: any) {
       console.error("Get all users error:", {
