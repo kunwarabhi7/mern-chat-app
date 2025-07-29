@@ -95,10 +95,10 @@ export const setupSocket = (server, app) => {
         };
 
         console.log("Emitting receiveMessage:", formattedMessage);
-        socket
-          .to(senderIdStr)
+        io.to(senderIdStr)
           .to(recipientIdStr)
           .emit("receiveMessage", formattedMessage);
+
         console.log("Message sent to users:", senderIdStr, recipientIdStr);
       } catch (error) {
         console.error("Error saving message:", error.message);
