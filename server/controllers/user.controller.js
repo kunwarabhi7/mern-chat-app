@@ -19,6 +19,8 @@ export const SignUp = async (req, res) => {
     }
     //create new User
     const newUser = new User({ username, email, password });
+    newUser.dp = "uploads/default-dp.png";
+
     await newUser.save();
     //Generate JWT TOKEN
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
@@ -68,7 +70,12 @@ export const Login = async (req, res) => {
       maxAge: 3600000,
     });
     return res.status(200).json({
-      user: { id: user._id, username: user.username, email: user.email },
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        dp: user.dp || "/images/default-dp.png",
+      },
       message: "Login Successfull",
     });
   } catch (error) {
@@ -87,14 +94,42 @@ export const getCurrentUser = async (req, res) => {
     }
     res.status(200).json({
       user: {
-        id: user._id,
+        id: user._id.toString(),
         username: user.username,
         email: user.email,
-        dp: user.dp,
+        dp: user.dp || "/images/default-dp.png",
       },
     });
   } catch (error) {
     console.error("Error in /user/me:", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const getAllUser = async (req, res) => {
+  try {
+    const users = await User.find({ _id: { $ne: req.user.id } }).select(
+      "-password"
+    );
+    console.log("Fetched users from DB:", users); // Debug log
+    res.json({
+      user: users
+        .map((u) => {
+          if (!u._id) {
+            console.error("User missing _id:", u);
+            return null;
+          }
+          return {
+            id: u._id.toString(),
+            username: u.username || "Unknown",
+            email: u.email || "",
+            dp: u.dp || "/images/default-dp.png",
+          };
+        })
+        .filter((u) => u !== null), // Remove any null entries
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error.message);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -123,18 +158,6 @@ export const logout = async (req, res) => {
     res
       .status(500)
       .json({ message: "Server error during logout", error: error.message });
-  }
-};
-
-export const getAllUser = async (req, res) => {
-  try {
-    const user = await User.find({ _id: { $ne: req.user.id } }).select(
-      "username email dp"
-    );
-    res.status(200).json({ user });
-  } catch (error) {
-    console.error("Error fetching users:", error.message);
-    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 

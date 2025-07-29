@@ -89,6 +89,7 @@ export default function Login() {
                   onChange={(e) => setUsername(e.target.value)}
                   className="bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400"
                   disabled={loading}
+                  autoComplete="username"
                 />
               </div>
               <div>
@@ -99,6 +100,7 @@ export default function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400"
                   disabled={loading}
+                  autoComplete="new-password"
                 />
               </div>
               <motion.div

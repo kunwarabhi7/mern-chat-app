@@ -5,11 +5,12 @@ import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/Navbar";
 import { AuthProvider } from "@/context/Auth.Context";
+import { ChatProvider } from "@/context/Chat.Context";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "ChatSphere",
+  title: "ChatApp",
   description:
     "A modern chat application with light and dark mode support designed by Abhishek",
 };
@@ -34,8 +35,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <Navbar />
-            <main className="container mx-auto p-4">{children}</main>
+            <ChatProvider>
+              <Navbar />
+              <main className="container mx-auto p-4">{children}</main>
+            </ChatProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

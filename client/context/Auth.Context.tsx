@@ -6,6 +6,8 @@ import {
   useState,
   useEffect,
   ReactNode,
+  useCallback,
+  useMemo,
 } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -65,71 +67,79 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   );
 
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        console.log("Checking session...");
-        setLoading(true);
-        const token = localStorage.getItem("token");
-        if (!token) {
-          console.log("No token found in localStorage");
-          setUser(null);
-          return;
-        }
-        const { data } = await api.get("/user/me", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        console.log("Session check response:", data);
-        setUser({
-          id: data.user._id, // Map _id to id
-          username: data.user.username,
-          email: data.user.email,
-          dp: data.user.dp || "/images/default-dp.png",
-        });
-      } catch (err: any) {
-        console.error("Session check error:", {
-          message: err.message,
-          status: err.response?.status,
-          data: err.response?.data,
-        });
+  const checkSession = async () => {
+    try {
+      console.log("Checking session...");
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.log("No token found in localStorage");
         setUser(null);
-        if (
-          err.response?.status !== 401 ||
-          (err.response?.data?.message !== "No token provided" &&
-            err.response?.data?.message !== "Token expired" &&
-            err.response?.data?.message !== "Invalid token" &&
-            err.response?.data?.message !== "Token is blacklisted")
-        ) {
-          setError(err.response?.data?.message || "Session check failed");
-        }
-      } finally {
-        console.log("Session check complete, loading:", false);
-        setLoading(false);
+        return;
       }
-    };
+      const { data } = await api.get("/user/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("Session check response:", data);
+      if (!data.user?.id) {
+        console.error("Invalid user data:", data.user);
+        throw new Error("Invalid user ID");
+      }
+      setUser({
+        id: data.user.id.toString(),
+        username: data.user.username,
+        email: data.user.email,
+        dp: data.user.dp || "/images/default-dp.png",
+      });
+    } catch (err: any) {
+      console.error("Session check error:", {
+        message: err.message,
+        status: err.response?.status,
+        data: err.response?.data,
+      });
+      setUser(null);
+      if (
+        err.response?.status !== 401 ||
+        (err.response?.data?.message !== "No token provided" &&
+          err.response?.data?.message !== "Token expired" &&
+          err.response?.data?.message !== "Invalid token" &&
+          err.response?.data?.message !== "Token is blacklisted")
+      ) {
+        setError(err.response?.data?.message || "Session check failed");
+      }
+    } finally {
+      console.log("Session check complete, loading:", false);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     checkSession();
   }, []);
 
-  const clearError = () => {
+  const clearError = useCallback(() => {
     console.log("Clearing error state");
     setError(null);
-  };
+  }, []);
 
   const signup = async (username: string, email: string, password: string) => {
     try {
       setLoading(true);
-      setError(null);
+      clearError();
       const { data } = await api.post("/user/signup", {
         username,
         email,
         password,
       });
       console.log("Signup response:", data);
+      if (!data.user?.id) {
+        throw new Error("Invalid user ID in signup response");
+      }
       localStorage.setItem("token", data.token);
       setUser({
-        id: data.user._id, // Map _id to id
+        id: data.user.id.toString(),
         username: data.user.username,
         email: data.user.email,
         dp: data.user.dp || "/images/default-dp.png",
@@ -152,12 +162,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (username: string, password: string) => {
     try {
       setLoading(true);
-      setError(null);
+      clearError();
       const { data } = await api.post("/user/login", { username, password });
       console.log("Login response:", data);
+      if (!data.user?.id) {
+        throw new Error("Invalid user ID in login response");
+      }
       localStorage.setItem("token", data.token);
       setUser({
-        id: data.user._id, // Map _id to id
+        id: data.user.id.toString(),
         username: data.user.username,
         email: data.user.email,
         dp: data.user.dp || "/images/default-dp.png",
@@ -180,7 +193,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     try {
       setLoading(true);
-      setError(null);
+      clearError();
       console.log("Initiating logout...");
       const token = localStorage.getItem("token");
       const response = await api.post("/user/logout", null, {
@@ -206,23 +219,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const getAllUsers = async () => {
+  const getAllUsers = useCallback(async () => {
+    console.log("Calling getAllUsers...");
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No token found");
+      }
       const { data } = await api.get("/user/list", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       console.log("Get all users response:", data);
-      return data.user.map((u: any) => ({
-        id: u._id, // Map _id to id
-        username: u.username,
-        email: u.email,
-        dp: u.dp || "/images/default-dp.png",
-        isOnline: false,
-      }));
+      if (!data.user) {
+        console.error("No user array in response:", data);
+        return [];
+      }
+      const mappedUsers = data.user
+        .map((u: any) => {
+          if (!u.id) {
+            console.error("User missing id:", u);
+            return null;
+          }
+          return {
+            id: u.id,
+            username: u.username || "Unknown",
+            email: u.email || "",
+            dp: u.dp || "/images/default-dp.png",
+            isOnline: false,
+          };
+        })
+        .filter((u: any) => u !== null);
+      console.log("Mapped users:", mappedUsers);
+      return mappedUsers;
     } catch (err: any) {
       console.error("Get all users error:", {
         message: err.message,
@@ -234,12 +265,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const userMemo = useMemo(() => user, [user?.id]);
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        user: userMemo,
         loading,
         error,
         signup,

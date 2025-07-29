@@ -14,29 +14,28 @@ export default function MessageList({
   typingUser,
 }: MessageListProps) {
   const { user } = useAuth();
-  console.log("typingUser:", typingUser);
-  console.log("selectedUser:", selectedUser);
-  console.log(
-    "Condition check:",
-    typingUser && selectedUser && typingUser === selectedUser.id
-  );
+  console.log("MessageList render:", {
+    messages,
+    selectedUser,
+    typingUser,
+    userId: user?.id,
+  });
 
   return (
     <div className="flex flex-col gap-2 px-2 py-4 sm:px-4">
-      {typingUser && selectedUser && typingUser === selectedUser.id && (
-        <p className="text-sm italic text-gray-500">
-          {selectedUser.username} is typing...
-        </p>
-      )}
-      {/* Temporary test to confirm rendering */}
-      {/* <p className="text-sm italic text-gray-500">Test typing indicator</p> */}
-
+      {typingUser &&
+        selectedUser &&
+        String(typingUser) === String(selectedUser.id) && (
+          <p className="text-sm italic text-gray-500">
+            {selectedUser.username} is typing...
+          </p>
+        )}
       {messages.length > 0 ? (
         messages.map((msg) => (
           <div
             key={msg._id}
             className={`p-2 sm:p-3 rounded-md break-words w-fit max-w-[85%] sm:max-w-[70%] text-sm sm:text-base ${
-              msg.sender._id === user?.id
+              String(msg.sender._id) === String(user?.id)
                 ? "ml-auto bg-blue-500 text-white"
                 : "mr-auto bg-gray-200 dark:bg-gray-600 text-black dark:text-white"
             }`}

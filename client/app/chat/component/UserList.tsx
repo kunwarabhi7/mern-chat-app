@@ -1,4 +1,3 @@
-// app/chat/component/UserList.tsx
 "use client";
 
 import { User } from "@/types";
@@ -17,7 +16,7 @@ export default function UserList({
   setSelectedUser,
 }: UserListProps) {
   const handleUserClick = (user: User) => {
-    console.log("Selected user:", user);
+    console.log("Selecting user:", user);
     setSelectedUser(user);
   };
 
@@ -26,7 +25,7 @@ export default function UserList({
     tap: { scale: 0.98 },
   };
 
-  console.log(users, "users");
+  console.log("Users in UserList:", users);
 
   return (
     <ScrollArea className="h-[50vh] border border-gray-300 dark:border-gray-600 p-4 rounded-md bg-gray-100 dark:bg-gray-700">
@@ -45,7 +44,11 @@ export default function UserList({
             whileTap="tap"
           >
             <img
-              src={user.dp || "/images/default-dp.png"}
+              src={
+                user.dp
+                  ? `http://localhost:5000${user.dp}`
+                  : "/images/default-dp.png"
+              }
               alt={user.username}
               className="w-8 h-8 rounded-full object-cover"
             />

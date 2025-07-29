@@ -43,51 +43,67 @@ export default function MessageInput({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (messageInput.trim()) {
-      console.log("Submitting message:", messageInput);
-      onSendMessage(messageInput);
-      setMessageInput("");
-      if (user && selectedUser) {
-        console.log("Emitting stopTyping:", {
-          senderId: user.id,
-          recipientId: selectedUser.id,
-        });
-        socket?.emit("stopTyping", {
-          senderId: user.id,
-          recipientId: selectedUser.id,
-        });
-      }
+    if (!user?.id || !selectedUser?.id || !messageInput.trim()) {
+      console.log("Submit skipped:", {
+        userId: user?.id,
+        selectedUserId: selectedUser?.id,
+        messageInput,
+      });
+      return;
     }
+    console.log("Submitting message:", messageInput);
+    onSendMessage(messageInput);
+    setMessageInput("");
+    console.log("Emitting stopTyping:", {
+      senderId: user.id,
+      recipientId: selectedUser.id,
+    });
+    socket?.emit("stopTyping", {
+      senderId: String(user.id),
+      recipientId: String(selectedUser.id),
+    });
   };
 
   const handleEmojiClick = (emojiData: { emoji: string }) => {
-    console.log("Selected sticker:", emojiData.emoji);
+    if (!user?.id || !selectedUser?.id) {
+      console.log("Emoji click skipped:", {
+        userId: user?.id,
+        selectedUserId: selectedUser?.id,
+      });
+      return;
+    }
+    console.log("Selected emoji:", emojiData.emoji);
     onSendMessage("", emojiData.emoji);
     setShowStickerPicker(false);
-    if (user && selectedUser) {
-      console.log("Emitting stopTyping:", {
-        senderId: user.id,
-        recipientId: selectedUser.id,
-      });
-      socket?.emit("stopTyping", {
-        senderId: user.id,
-        recipientId: selectedUser.id,
-      });
-    }
+    console.log("Emitting stopTyping:", {
+      senderId: user.id,
+      recipientId: selectedUser.id,
+    });
+    socket?.emit("stopTyping", {
+      senderId: String(user.id),
+      recipientId: String(selectedUser.id),
+    });
   };
 
   const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setMessageInput(value);
-    if (!socket || !selectedUser || !user) return;
+    if (!socket || !selectedUser?.id || !user?.id) {
+      console.log("Typing event skipped:", {
+        socket: !!socket,
+        selectedUserId: selectedUser?.id,
+        userId: user?.id,
+      });
+      return;
+    }
 
     console.log("Emitting typing:", {
       senderId: user.id,
       recipientId: selectedUser.id,
     });
     socket.emit("typing", {
-      senderId: user.id,
-      recipientId: selectedUser.id,
+      senderId: String(user.id),
+      recipientId: String(selectedUser.id),
     });
 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -98,20 +114,23 @@ export default function MessageInput({
         recipientId: selectedUser.id,
       });
       socket.emit("stopTyping", {
-        senderId: user.id,
-        recipientId: selectedUser.id,
+        senderId: String(user.id),
+        recipientId: String(selectedUser.id),
       });
     }, 2000);
   };
 
   useEffect(() => {
-    console.log("Sticker picker visible:", showStickerPicker);
+    console.log("MessageInput render:", {
+      userId: user?.id,
+      selectedUserId: selectedUser?.id,
+    });
     return () => {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
     };
-  }, [showStickerPicker]);
+  }, [showStickerPicker, user?.id, selectedUser?.id]);
 
   return (
     <motion.div
@@ -127,7 +146,8 @@ export default function MessageInput({
           value={messageInput}
           onChange={handleTyping}
           className="flex-1 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm sm:text-base"
-          disabled={!selectedUser}
+          disabled={!selectedUser?.id || !user?.id}
+          autoComplete="off"
         />
         <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
           <Button
@@ -135,7 +155,7 @@ export default function MessageInput({
             variant="ghost"
             size="icon"
             onClick={() => setShowStickerPicker(!showStickerPicker)}
-            disabled={!selectedUser}
+            disabled={!selectedUser?.id || !user?.id}
             className="text-blue-500 dark:text-blue-400"
           >
             <Smile className="h-5 w-5" />
@@ -145,7 +165,7 @@ export default function MessageInput({
           <Button
             type="submit"
             className="bg-blue-500 hover:bg-blue-600 text-white text-sm sm:text-base"
-            disabled={!selectedUser || !messageInput.trim()}
+            disabled={!selectedUser?.id || !user?.id || !messageInput.trim()}
           >
             Send
           </Button>

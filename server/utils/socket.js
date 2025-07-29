@@ -23,9 +23,10 @@ export const setupSocket = (server, app) => {
         socket.emit("error", { message: "User ID required" });
         return;
       }
-      console.log(`User ${userId} joined`);
-      socket.join(userId);
-      onlineUsers.set(userId, socket.id);
+      const userIdStr = String(userId);
+      console.log(`User ${userIdStr} joined`);
+      socket.join(userIdStr);
+      onlineUsers.set(userIdStr, socket.id);
       console.log("Online users:", Array.from(onlineUsers.keys()));
       io.emit("onlineUsers", Array.from(onlineUsers.keys()));
     });
@@ -36,8 +37,10 @@ export const setupSocket = (server, app) => {
         socket.emit("error", { message: "Invalid sender or recipient ID" });
         return;
       }
-      console.log(`User ${senderId} is typing to ${recipientId}`);
-      io.to(recipientId).emit("typing", { senderId });
+      const senderIdStr = String(senderId);
+      const recipientIdStr = String(recipientId);
+      console.log(`User ${senderIdStr} is typing to ${recipientIdStr}`);
+      socket.to(recipientIdStr).emit("typing", { senderId: senderIdStr });
     });
 
     socket.on("stopTyping", ({ senderId, recipientId }) => {
@@ -46,8 +49,10 @@ export const setupSocket = (server, app) => {
         socket.emit("error", { message: "Invalid sender or recipient ID" });
         return;
       }
-      console.log(`User ${senderId} stopped typing to ${recipientId}`);
-      io.to(recipientId).emit("stopTyping", { senderId });
+      const senderIdStr = String(senderId);
+      const recipientIdStr = String(recipientId);
+      console.log(`User ${senderIdStr} stopped typing to ${recipientIdStr}`);
+      socket.to(recipientIdStr).emit("stopTyping", { senderId: senderIdStr });
     });
 
     socket.on("sendMessage", async (messageData) => {
@@ -56,13 +61,17 @@ export const setupSocket = (server, app) => {
         const { senderId, recipientId, content, sticker } = messageData;
 
         if (!senderId || !recipientId) {
+          console.error("SendMessage failed:", { senderId, recipientId });
           socket.emit("error", { message: "Invalid sender or recipient ID" });
           return;
         }
 
+        const senderIdStr = String(senderId);
+        const recipientIdStr = String(recipientId);
+
         const message = new Message({
-          sender: senderId,
-          recipient: recipientId,
+          sender: senderIdStr,
+          recipient: recipientIdStr,
           content: content || "",
           sticker: sticker || null,
         });
@@ -72,10 +81,25 @@ export const setupSocket = (server, app) => {
           .populate("sender", "username email dp")
           .populate("recipient", "username email dp");
 
-        io.to(senderId)
-          .to(recipientId)
-          .emit("receiveMessage", populatedMessage);
-        console.log("Message sent to users:", senderId, recipientId);
+        const formattedMessage = {
+          ...populatedMessage.toObject(),
+          _id: populatedMessage._id.toString(),
+          sender: {
+            ...populatedMessage.sender.toObject(),
+            _id: populatedMessage.sender._id.toString(),
+          },
+          recipient: {
+            ...populatedMessage.recipient.toObject(),
+            _id: populatedMessage.recipient._id.toString(),
+          },
+        };
+
+        console.log("Emitting receiveMessage:", formattedMessage);
+        socket
+          .to(senderIdStr)
+          .to(recipientIdStr)
+          .emit("receiveMessage", formattedMessage);
+        console.log("Message sent to users:", senderIdStr, recipientIdStr);
       } catch (error) {
         console.error("Error saving message:", error.message);
         socket.emit("error", { message: "Failed to send message" });

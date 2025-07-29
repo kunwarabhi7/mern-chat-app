@@ -1,9 +1,23 @@
+import { Socket } from "socket.io-client";
+
 export interface User {
   id: string; // Single ID field
   username: string;
   email: string;
   isOnline?: boolean;
   dp?: string | null;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  error: string | null;
+  signup: (username: string, email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  clearError: () => void;
+  getAllUsers: () => Promise<User[]>;
 }
 
 export interface Message {
@@ -27,4 +41,20 @@ export interface MessageListProps {
   messages: Message[];
   selectedUser: User | null;
   typingUser: string | null;
+}
+
+export interface ChatContextType {
+  users: User[];
+  selectedUser: User | null;
+  messages: Message[];
+  typingUser: string | null;
+  selectUser: (user: User | null) => void;
+  sendMessage: (content: string, sticker?: string) => void;
+  socket: Socket | null;
+}
+
+export interface MessageInputProps {
+  selectedUser: User | null;
+  onSendMessage: (content: string, sticker?: string) => void;
+  socket: Socket | null;
 }
