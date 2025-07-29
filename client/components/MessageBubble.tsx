@@ -18,7 +18,7 @@ export function MessageBubble({ message, isOwnMessage }: MessageBubbleProps) {
             <AvatarImage
               src={`https://i.pravatar.cc/150?u=${message.sender}`}
             />
-            <AvatarFallback>{message.sender[0]}</AvatarFallback>
+            <AvatarFallback>{message.sender.username[0]}</AvatarFallback>
           </Avatar>
         )}
         <div
@@ -34,7 +34,7 @@ export function MessageBubble({ message, isOwnMessage }: MessageBubbleProps) {
             <p className="text-sm">{message.content}</p>
           )}
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {format(new Date(message.timestamp), "h:mm a")}
+            {format(new Date(message.createdAt), "h:mm a")}
           </p>
         </div>
       </div>
