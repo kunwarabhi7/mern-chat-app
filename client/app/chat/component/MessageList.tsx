@@ -16,21 +16,18 @@ export default function MessageList({
 }: MessageListProps) {
   const { user } = useAuth();
   const lastMessageRef = useRef<HTMLDivElement | null>(null);
+  const typingRef = useRef<HTMLParagraphElement | null>(null);
 
   useEffect(() => {
-    lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (messages.length > 0) {
+      lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
+    } else if (typingRef.current) {
+      typingRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, typingUser]);
 
   return (
     <div className="flex flex-col gap-2 px-2 py-4 sm:px-4 overflow-y-auto">
-      {typingUser &&
-        selectedUser &&
-        String(typingUser) === String(selectedUser.id) && (
-          <p className="text-sm italic text-gray-500">
-            {selectedUser.username} is typing...
-          </p>
-        )}
-
       {messages.length > 0 ? (
         messages.map((msg, idx) => {
           const isLast = idx === messages.length - 1;
@@ -59,6 +56,17 @@ export default function MessageList({
           No messages yet.
         </p>
       )}
+
+      {typingUser &&
+        selectedUser &&
+        String(typingUser) === String(selectedUser.id) && (
+          <p
+            ref={typingRef}
+            className="text-sm italic text-gray-500 px-2 sm:px-4"
+          >
+            {selectedUser.username} is typing...
+          </p>
+        )}
     </div>
   );
 }
