@@ -56,6 +56,8 @@ export const setupSocket = (server, app) => {
     });
 
     socket.on("sendMessage", async (messageData) => {
+      console.log("📥 Backend received messageData:", messageData);
+
       try {
         console.log("Received message data:", messageData);
         const { senderId, recipientId, content, sticker } = messageData;

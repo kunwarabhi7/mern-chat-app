@@ -5,8 +5,6 @@ import { io, Socket } from "socket.io-client";
 import axios from "axios";
 import { useAuth } from "./Auth.Context";
 import { User, Message } from "@/types";
-import socket from "@/lib/socket";
-import axiosInstance from "@/lib/axiosInstance";
 
 interface ChatContextType {
   users: User[];
@@ -28,9 +26,20 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [typingUser, setTypingUser] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
 
+  const api = axios.create({
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
+    withCredentials: true,
+  });
+
   // 📦 Socket setup
   useEffect(() => {
     if (!user?.id) return;
+    const socket: Socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
+      withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
 
     socketRef.current = socket;
 
@@ -152,12 +161,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     const fetchMessages = async () => {
       try {
         const token = localStorage.getItem("token");
-        const { data } = await axiosInstance.get(
-          `/message/${selectedUser.id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const { data } = await api.get(`/message/${selectedUser.id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (isMounted) setMessages(data.messages || []);
       } catch (err) {
         console.error("Fetch messages error:", err);
@@ -172,10 +178,17 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   // ✉️ Send message
   const sendMessage = (content: string, sticker?: string) => {
-    if (!selectedUser?.id || !user?.id || (!content?.trim() && !sticker))
-      return;
+    if (!socketRef.current || !selectedUser || !user) return;
+    if (!content.trim() && !sticker) return;
 
-    socketRef.current?.emit("sendMessage", {
+    console.log("📤 Emitting sendMessage:", {
+      senderId: user.id,
+      recipientId: selectedUser.id,
+      content,
+      sticker,
+    });
+
+    socketRef.current.emit("sendMessage", {
       senderId: String(user.id),
       recipientId: String(selectedUser.id),
       content,

@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import axios from "axios";
 import Link from "next/link";
-import socket from "@/lib/socket";
 import axiosInstance from "@/lib/axiosInstance";
+import { io, Socket } from "socket.io-client";
 
 export default function Profile() {
   const { user, setUser } = useAuth();
@@ -20,6 +20,13 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const socket: Socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
+      withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
+
     socket.on("userUpdated", (updatedUser) => {
       console.log("Received userUpdated event:", updatedUser);
       if (user && updatedUser.id === user.id) {

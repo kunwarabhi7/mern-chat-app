@@ -13,7 +13,7 @@ import {
 import { DarkModeToggle } from "./DarkModeToggle";
 import { motion } from "framer-motion";
 import { Menu, MessageSquare, X } from "lucide-react";
-import socket from "@/lib/socket";
+import { io, Socket } from "socket.io-client";
 
 export function Navbar() {
   const { logout, loading, user, setUser } = useAuth();
@@ -22,6 +22,12 @@ export function Navbar() {
   // Handle userUpdated event for real-time DP update
   useEffect(() => {
     if (!user) return;
+    const socket: Socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
+      withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
 
     socket.on("userUpdated", (updatedUser) => {
       console.log("Received userUpdated event in Navbar:", updatedUser);
