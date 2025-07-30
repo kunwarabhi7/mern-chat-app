@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { User } from "@/types";
+import { MessageInputProps, User } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Smile } from "lucide-react";
@@ -14,12 +14,6 @@ const EmojiPicker = dynamic(
   () => import("emoji-picker-react").then((mod) => mod.default),
   { ssr: false }
 );
-
-interface MessageInputProps {
-  selectedUser: User | null;
-  onSendMessage: (content: string, sticker?: string) => void;
-  socket: Socket | null;
-}
 
 export default function MessageInput({
   selectedUser,

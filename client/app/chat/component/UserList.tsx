@@ -1,14 +1,8 @@
 "use client";
 
-import { User } from "@/types";
+import { User, UserListProps } from "@/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion } from "framer-motion";
-
-interface UserListProps {
-  users: User[];
-  selectedUser: User | null;
-  setSelectedUser: (user: User | null) => void;
-}
 
 export default function UserList({
   users,

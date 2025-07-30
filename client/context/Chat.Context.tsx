@@ -4,17 +4,7 @@ import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import axios from "axios";
 import { useAuth } from "./Auth.Context";
-import { User, Message } from "@/types";
-
-interface ChatContextType {
-  users: User[];
-  selectedUser: User | null;
-  messages: Message[];
-  typingUser: string | null;
-  selectUser: (user: User | null) => void;
-  sendMessage: (content: string, sticker?: string) => void;
-  socket: Socket | null;
-}
+import { User, Message, ChatContextType } from "@/types";
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 

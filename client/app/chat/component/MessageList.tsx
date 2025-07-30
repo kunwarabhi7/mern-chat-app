@@ -1,13 +1,7 @@
 "use client";
-import { Message, User } from "@/types";
+import { Message, MessageListProps, User } from "@/types";
 import { useAuth } from "@/context/Auth.Context";
 import { useEffect, useRef } from "react";
-
-interface MessageListProps {
-  messages: Message[];
-  selectedUser: User | null;
-  typingUser: string | null;
-}
 
 export default function MessageList({
   messages,

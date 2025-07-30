@@ -58,3 +58,9 @@ export interface MessageInputProps {
   onSendMessage: (content: string, sticker?: string) => void;
   socket: Socket | null;
 }
+
+export interface UserListProps {
+  users: User[];
+  selectedUser: User | null;
+  setSelectedUser: (user: User | null) => void;
+}

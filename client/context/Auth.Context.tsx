@@ -10,20 +10,8 @@ import {
   useMemo,
 } from "react";
 import { useRouter } from "next/navigation";
-import { User } from "@/types";
+import { AuthContextType, User } from "@/types";
 import axiosInstance from "@/lib/axiosInstance";
-
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>;
-  error: string | null;
-  signup: (username: string, email: string, password: string) => Promise<void>;
-  login: (username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  clearError: () => void;
-  getAllUsers: () => Promise<User[]>;
-}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 

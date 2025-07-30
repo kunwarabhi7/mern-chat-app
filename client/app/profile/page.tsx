@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import axios from "axios";
 import Link from "next/link";
 import axiosInstance from "@/lib/axiosInstance";
 import { io, Socket } from "socket.io-client";
