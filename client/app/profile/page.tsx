@@ -12,7 +12,7 @@ import axiosInstance from "@/lib/axiosInstance";
 import { io, Socket } from "socket.io-client";
 
 export default function Profile() {
-  const { user, setUser } = useAuth();
+  const { user, setUser, updateProfilePhoto } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -47,33 +47,16 @@ export default function Profile() {
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      if (!["image/jpeg", "image/png"].includes(selectedFile.type)) {
-        setError("Only JPEG or PNG images are allowed");
-        setFile(null);
-        setPreview(null);
-        return;
-      }
-      if (selectedFile.size > 5 * 1024 * 1024) {
-        setError("File size must be less than 5MB");
-        setFile(null);
-        setPreview(null);
-        return;
-      }
-      setFile(selectedFile);
-      setPreview(URL.createObjectURL(selectedFile));
-      setError(null);
-      console.log("Selected file:", {
-        name: selectedFile.name,
-        type: selectedFile.type,
-        size: selectedFile.size,
-      });
-    } else {
-      setFile(null);
-      setPreview(null);
-      setError("No file selected");
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const formData = new FormData();
+    formData.append("dp", e.target.files[0]);
+
+    try {
+      await updateProfilePhoto(formData);
+      alert("Profile photo updated!");
+    } catch (err: any) {
+      alert(err.message || "Something went wrong");
     }
   };
 
@@ -98,8 +81,8 @@ export default function Profile() {
       });
 
       if (user) {
-        // Type guard: ensure user is not null
-        setUser({ ...user, dp: data.dp });
+        const updatedUser = { ...user, dp: data.dp };
+        setUser(updatedUser);
       }
       setFile(null);
       setPreview(null);

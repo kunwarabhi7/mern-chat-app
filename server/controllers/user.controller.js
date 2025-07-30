@@ -212,7 +212,15 @@ export const uploadDP = async (req, res) => {
       console.error("Socket.IO instance not found");
     }
 
-    res.status(200).json({ message: "DP updated successfully", dp: user.dp });
+    res.status(200).json({
+      message: "DP updated successfully",
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        dp: user.dp,
+      },
+    });
   } catch (error) {
     console.error("Error uploading DP:", error.message, error.stack);
     res

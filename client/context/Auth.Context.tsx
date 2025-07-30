@@ -179,6 +179,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }
   };
+  const updateProfilePhoto = async (formData: FormData) => {
+    try {
+      setLoading(true);
+      clearError();
+      const { data } = await axiosInstance.post("/user/dp", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      if (!data.user?.id) throw new Error("Invalid user data");
+
+      setUser((prev) =>
+        prev ? { ...prev, dp: data.user.dp || "/images/default-dp.png" } : null
+      );
+    } catch (err: any) {
+      console.error("DP update failed:", err);
+      setError(err.response?.data?.message || "Failed to update photo");
+      throw new Error(err.response?.data?.message || "Update failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getAllUsers = useCallback(async () => {
     try {
@@ -228,6 +249,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         clearError,
         setUser,
         getAllUsers,
+        updateProfilePhoto,
       }}
     >
       {children}
