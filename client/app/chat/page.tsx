@@ -39,10 +39,16 @@ export default function Chat() {
       </div>
     );
   }
+  console.log(
+    "Image src:",
+    user?.dp
+      ? `${process.env.NEXT_PUBLIC_API_URL}${user.dp}`
+      : "/images/default-dp.png"
+  );
 
   return (
     <ProtectedRoute>
-      <div className="h-[calc(100vh-64px)] mt-[64px] flex flex-col p-2 sm:p-4">
+      <div className="h-[calc(100vh-64px)] flex flex-col p-2 sm:p-4">
         {/* Mobile "Show Users" button */}
         <div className="sm:hidden sticky top-[64px] z-20 bg-white dark:bg-gray-900 px-2 py-2 flex items-center justify-between border-b dark:border-gray-700">
           <div className="flex items-center gap-2 text-blue-500 dark:text-blue-400 text-base font-medium">
@@ -56,15 +62,14 @@ export default function Chat() {
             >
               Users
             </button>
-            <img
-              src={
-                user.dp
-                  ? `http://localhost:5000${user.dp}`
-                  : "/images/default-dp.png"
-              }
-              alt={user.username}
-              className="w-9 h-9 rounded-full object-cover"
-            />
+
+            {user?.dp && (
+              <img
+                src={`${process.env.NEXT_PUBLIC_API_URL}${user.dp}`}
+                alt={user.username}
+                className="w-9 h-9 rounded-full object-cover"
+              />
+            )}
           </div>
         </div>
 
@@ -100,21 +105,19 @@ export default function Chat() {
         {/* Main Chat Card */}
         <Card className="flex flex-col h-full overflow-hidden">
           {/* Desktop-only Header */}
-          <CardHeader className="hidden sm:block sticky top-0 z-10 bg-white dark:bg-gray-900">
-            <CardTitle className="text-xl sm:text-2xl flex items-center justify-between text-blue-500 dark:text-blue-400">
+          <CardHeader className="sticky top-[32px] mt-4 hidden md:block  z-30 bg-white dark:bg-gray-900">
+            <CardTitle className="text-lg sm:text-2xl flex items-center justify-between text-blue-500 dark:text-blue-400">
               <div className="flex items-center gap-2">
                 <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
                 <span>ChatApp - {user.username}</span>
               </div>
-              <img
-                src={
-                  user.dp
-                    ? `http://localhost:5000${user.dp}`
-                    : "/images/default-dp.png"
-                }
-                alt={user.username}
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
-              />
+              {user?.dp && (
+                <img
+                  src={`${process.env.NEXT_PUBLIC_API_URL}${user.dp}`}
+                  alt={user.username}
+                  className="w-9 h-9 rounded-full object-cover"
+                />
+              )}
             </CardTitle>
           </CardHeader>
 

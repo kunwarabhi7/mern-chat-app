@@ -39,7 +39,9 @@ export default function UserList({
             <img
               src={
                 user.dp
-                  ? `http://localhost:5000${user.dp}`
+                  ? `${process.env.NEXT_PUBLIC_API_URL}${
+                      user.dp
+                    }?t=${Date.now()}`
                   : "/images/default-dp.png"
               }
               alt={user.username}

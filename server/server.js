@@ -30,7 +30,8 @@ app.use(
 );
 
 // ✅ MIDDLEWARES
-app.use("/uploads", express.static(path.join("uploads")));
+app.use("/api/uploads", express.static(path.resolve("uploads")));
+
 app.use(express.json());
 app.use(cookieParser());
 

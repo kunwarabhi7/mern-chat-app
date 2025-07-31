@@ -40,7 +40,7 @@ export default function RootLayout({
           <AuthProvider>
             <ChatProvider>
               <Navbar />
-              <main className="container mx-auto p-4">{children}</main>
+              <main className="container mx-auto pt-0 px-4">{children}</main>
             </ChatProvider>
           </AuthProvider>
         </ThemeProvider>

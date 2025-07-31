@@ -75,7 +75,6 @@ export default function Profile() {
       setLoading(true);
       setError(null);
       console.log("Uploading DP...");
-      const token = localStorage.getItem("token");
       const { data } = await axiosInstance.post("/user/dp", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -134,7 +133,9 @@ export default function Profile() {
                   src={
                     preview ||
                     (user.dp
-                      ? `http://localhost:5000${user.dp}`
+                      ? `${process.env.NEXT_PUBLIC_API_URL}${
+                          user.dp
+                        }?t=${Date.now()}`
                       : "/images/default-dp.png")
                   }
                   alt="Profile"
