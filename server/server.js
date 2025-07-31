@@ -6,16 +6,30 @@ import { createServer } from "http";
 import connectToDB from "./utils/connectToDB.js";
 import { UserRouter } from "./routes/user.route.js";
 import { MessageRouter } from "./routes/message.route.js";
-import path from "path";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
 import { setupSocket } from "./utils/socket.js";
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const PORT = process.env.PORT || 5000;
 const app = express();
 const server = createServer(app);
 
-// ✅ CORS FIXED
+// ✅ Ensure uploads folder exists (important for Render)
+const uploadsPath = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath);
+}
+
+// ✅ Serve static images from uploads folder
+app.use("/api/uploads", express.static(uploadsPath));
+
+// ✅ CORS
 const allowedOrigins = [
   "http://localhost:3000",
   "https://abhichatkaro.vercel.app",
@@ -29,13 +43,11 @@ app.use(
   })
 );
 
-// ✅ MIDDLEWARES
-app.use("/api/uploads", express.static(path.resolve("uploads")));
-
+// ✅ Middlewares
 app.use(express.json());
 app.use(cookieParser());
 
-// ✅ ROUTES
+// ✅ Routes
 app.use("/api/user", UserRouter);
 app.use("/api/message", MessageRouter);
 
@@ -43,9 +55,10 @@ app.get("/", (req, res) => {
   res.status(200).json({ message: "Route working fine" });
 });
 
+// ✅ Socket setup
 const io = setupSocket(server, app);
 
-// ✅ START SERVER
+// ✅ Start server
 const startServer = async () => {
   try {
     await connectToDB();
