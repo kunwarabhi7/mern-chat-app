@@ -26,9 +26,6 @@ if (!fs.existsSync(uploadsPath)) {
   fs.mkdirSync(uploadsPath);
 }
 
-// ✅ Serve static images from uploads folder
-app.use("/api/uploads", express.static(uploadsPath));
-
 // ✅ CORS
 const allowedOrigins = [
   "http://localhost:3000",
@@ -44,6 +41,7 @@ app.use(
 );
 
 // ✅ Middlewares
+app.use("/api/uploads", express.static(uploadsPath));
 app.use(express.json());
 app.use(cookieParser());
 

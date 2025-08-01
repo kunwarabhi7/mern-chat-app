@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import BlackList from "../models/Blacklist.model.js";
 import fs from "fs";
+import path from "path";
 
 dotenv.config();
 
@@ -164,53 +165,24 @@ export const logout = async (req, res) => {
 
 export const uploadDP = async (req, res) => {
   try {
-    console.log("DP upload request:", {
-      body: req.body,
-      file: req.file,
-      user: req.user,
-    });
+    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
 
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
-    }
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const userId = req.user.id;
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const filePath = path.join("uploads", req.file.filename);
+    const fileData = fs.readFileSync(filePath); // read file
 
-    // Delete existing dp if exists
-    if (user.dp) {
-      try {
-        const oldDpPath = path.join("uploads", path.basename(user.dp));
-        if (fs.existsSync(oldDpPath)) {
-          fs.unlinkSync(oldDpPath);
-          console.log("Old DP deleted:", oldDpPath);
-        }
-      } catch (error) {
-        console.error("Error deleting old DP:", error.message);
-      }
-    }
+    // convert to base64
+    const base64Image = `data:${req.file.mimetype};base64,${fileData.toString(
+      "base64"
+    )}`;
 
-    // Save new dp
-    user.dp = `/uploads/${req.file.filename}`;
+    user.dp = base64Image; // Save base64 to MongoDB
     await user.save();
-    console.log("New DP saved:", user.dp);
 
-    // Emit userUpdated event via Socket.IO
-    const io = req.app.get("io");
-    if (io) {
-      io.emit("userUpdated", {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        dp: user.dp,
-      });
-      console.log("Emitted userUpdated event for user:", user._id);
-    } else {
-      console.error("Socket.IO instance not found");
-    }
+    // delete the uploaded file
+    fs.unlinkSync(filePath);
 
     res.status(200).json({
       message: "DP updated successfully",
@@ -218,13 +190,11 @@ export const uploadDP = async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
-        dp: user.dp,
+        dp: user.dp, // already base64
       },
     });
-  } catch (error) {
-    console.error("Error uploading DP:", error.message, error.stack);
-    res
-      .status(500)
-      .json({ message: "Failed to upload DP", error: error.message });
+  } catch (err) {
+    console.error("DP upload error:", err.message);
+    res.status(500).json({ message: "Failed to upload DP" });
   }
 };

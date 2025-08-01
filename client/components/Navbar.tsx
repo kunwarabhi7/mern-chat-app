@@ -93,11 +93,7 @@ export function Navbar() {
                 <span>Welcome, {user.username}</span>
                 <img
                   className="w-12 h-12 rounded-full object-cover"
-                  src={
-                    user.dp
-                      ? `${process.env.NEXT_PUBLIC_API_URL}${user.dp}`
-                      : "/images/default-dp.png"
-                  }
+                  src={user.dp || ""}
                   alt={user.username || "Profile"}
                 />
               </span>
