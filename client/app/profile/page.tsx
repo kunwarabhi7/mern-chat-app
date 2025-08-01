@@ -48,35 +48,31 @@ export default function Profile() {
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    const formData = new FormData();
-    formData.append("dp", e.target.files[0]);
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    try {
-      await updateProfilePhoto(formData);
-      alert("Profile photo updated!");
-    } catch (err: any) {
-      alert(err.message || "Something went wrong");
-    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setPreview(base64String);
+      setFile(file); // optional, in case you need it
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) {
+    if (!preview) {
       setError("Please select an image");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("dp", file);
-    console.log("FormData contents:", [...formData.entries()]);
-
     try {
       setLoading(true);
       setError(null);
-      console.log("Uploading DP...");
-      const { data } = await axiosInstance.post("/user/dp", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+
+      const { data } = await axiosInstance.post("/user/dp", {
+        dp: preview, // send base64 string
       });
 
       if (user) {
@@ -85,7 +81,6 @@ export default function Profile() {
       }
       setFile(null);
       setPreview(null);
-      console.log("DP updated:", data.dp);
     } catch (err: any) {
       console.error("Error uploading DP:", err.message, err.response?.data);
       setError(err.response?.data?.message || "Failed to upload DP");

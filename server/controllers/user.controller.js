@@ -165,36 +165,41 @@ export const logout = async (req, res) => {
 
 export const uploadDP = async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+    const { dp } = req.body;
+    const userId = req.user.id;
 
-    const user = await User.findById(req.user.id);
+    if (!dp) {
+      return res.status(400).json({ message: "No image provided" });
+    }
+
+    const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const filePath = path.join("uploads", req.file.filename);
-    const fileData = fs.readFileSync(filePath); // read file
-
-    // convert to base64
-    const base64Image = `data:${req.file.mimetype};base64,${fileData.toString(
-      "base64"
-    )}`;
-
-    user.dp = base64Image; // Save base64 to MongoDB
+    user.dp = dp; // ✅ base64 string directly
     await user.save();
 
-    // delete the uploaded file
-    fs.unlinkSync(filePath);
+    // Emit updated user to all clients via socket
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("userUpdated", {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        dp: user.dp,
+      });
+    }
 
     res.status(200).json({
-      message: "DP updated successfully",
+      message: "DP updated",
       user: {
         id: user._id,
         username: user.username,
         email: user.email,
-        dp: user.dp, // already base64
+        dp: user.dp,
       },
     });
-  } catch (err) {
-    console.error("DP upload error:", err.message);
-    res.status(500).json({ message: "Failed to upload DP" });
+  } catch (error) {
+    console.error("Upload DP error:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
