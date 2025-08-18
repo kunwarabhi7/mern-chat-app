@@ -42,7 +42,8 @@ app.use(
 
 // ✅ Middlewares
 app.use("/api/uploads", express.static(uploadsPath));
-app.use(express.json());
+app.use(express.json({ limit: "5mb" })); // ✅ allow bigger base64 images
+app.use(express.urlencoded({ extended: true, limit: "5mb" })); // for safety
 app.use(cookieParser());
 
 // ✅ Routes

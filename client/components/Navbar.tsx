@@ -185,11 +185,7 @@ export function Navbar() {
                   >
                     <img
                       className="w-8 h-8 rounded-full object-cover"
-                      src={
-                        user.dp
-                          ? `${process.env.NEXT_PUBLIC_API_URL}${user.dp}`
-                          : "/images/default-dp.png"
-                      }
+                      src={user.dp || ""}
                       alt={user.username || "Profile"}
                     />
                     <span>Welcome, {user.username}</span>

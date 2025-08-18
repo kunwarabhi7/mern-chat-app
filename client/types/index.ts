@@ -18,7 +18,7 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   clearError: () => void;
   getAllUsers: () => Promise<User[]>;
-  updateProfilePhoto: (formData: FormData) => Promise<void>;
+  updateProfilePhoto: (base64Image: string) => Promise<void>;
 }
 
 export interface Message {

@@ -29,8 +29,7 @@ router.post("/logout", authMiddleware, logout);
 router.get("/me", authMiddleware, getCurrentUser);
 
 // Upload Profile Picture
-router.post("/dp", authMiddleware, upload.single("dp"), uploadDP);
-
+router.post("/dp", authMiddleware, uploadDP);
 //Get all User
 router.get("/list", authMiddleware, getAllUser);
 export { router as UserRouter };

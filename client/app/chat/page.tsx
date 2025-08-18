@@ -39,12 +39,6 @@ export default function Chat() {
       </div>
     );
   }
-  console.log(
-    "Image src:",
-    user?.dp
-      ? `${process.env.NEXT_PUBLIC_API_URL}${user.dp}`
-      : "/images/default-dp.png"
-  );
 
   return (
     <ProtectedRoute>
@@ -65,7 +59,7 @@ export default function Chat() {
 
             {user?.dp && (
               <img
-                src={`${process.env.NEXT_PUBLIC_API_URL}${user.dp}`}
+                src={user?.dp}
                 alt={user.username}
                 className="w-9 h-9 rounded-full object-cover"
               />
@@ -113,7 +107,7 @@ export default function Chat() {
               </div>
               {user?.dp && (
                 <img
-                  src={`${process.env.NEXT_PUBLIC_API_URL}${user.dp}`}
+                  src={user?.dp}
                   alt={user.username}
                   className="w-9 h-9 rounded-full object-cover"
                 />

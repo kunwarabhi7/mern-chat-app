@@ -179,15 +179,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }
   };
-  const updateProfilePhoto = async (formData: FormData) => {
+
+  const updateProfilePhoto = async (dpBase64: string) => {
     try {
       setLoading(true);
       clearError();
-      const { data } = await axiosInstance.post("/user/dp", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const { data } = await axiosInstance.post("/user/dp", {
+        dp: dpBase64,
       });
 
-      if (!data.user?.id) throw new Error("Invalid user data");
+      if (!data.user?.id) throw new Error("Invalid user data"); // Changed to .id
 
       setUser((prev) =>
         prev ? { ...prev, dp: data.user.dp || "/images/default-dp.png" } : null

@@ -164,42 +164,41 @@ export const logout = async (req, res) => {
 };
 
 export const uploadDP = async (req, res) => {
+  const { dp } = req.body || {};
+  const userId = req.user?.id;
+
+  if (!dp || !userId) {
+    return res.status(400).json({ message: "DP or User ID missing" });
+  }
+
   try {
-    const { dp } = req.body;
-    const userId = req.user.id;
-
-    if (!dp) {
-      return res.status(400).json({ message: "No image provided" });
-    }
-
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).exec();
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    user.dp = dp; // ✅ base64 string directly
+    user.dp = dp;
     await user.save();
 
-    // Emit updated user to all clients via socket
     const io = req.app.get("io");
     if (io) {
       io.emit("userUpdated", {
-        id: user._id,
-        username: user.username,
-        email: user.email,
+        id: user._id.toString(),
         dp: user.dp,
       });
     }
 
     res.status(200).json({
-      message: "DP updated",
+      message: "DP updated successfully",
       user: {
-        id: user._id,
+        id: user._id.toString(),
         username: user.username,
         email: user.email,
         dp: user.dp,
       },
     });
   } catch (error) {
-    console.error("Upload DP error:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Upload DP error:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to upload DP", error: error.message });
   }
 };
