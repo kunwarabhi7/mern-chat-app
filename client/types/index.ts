@@ -6,6 +6,7 @@ export interface User {
   email: string;
   isOnline?: boolean;
   dp?: string | null;
+  updatedAt?: Date | null;
 }
 
 export interface AuthContextType {
@@ -18,7 +19,7 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   clearError: () => void;
   getAllUsers: () => Promise<User[]>;
-  updateProfilePhoto: (base64Image: string) => Promise<void>;
+  updateProfilePhoto: (base64Image: string) => Promise<UpdateProfileResponse>; // 👈 fix here
 }
 
 export interface Message {
@@ -64,4 +65,9 @@ export interface UserListProps {
   users: User[];
   selectedUser: User | null;
   setSelectedUser: (user: User | null) => void;
+}
+
+export interface UpdateProfileResponse {
+  message: string;
+  user: User;
 }

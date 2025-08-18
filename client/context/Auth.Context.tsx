@@ -10,7 +10,7 @@ import {
   useMemo,
 } from "react";
 import { useRouter } from "next/navigation";
-import { AuthContextType, User } from "@/types";
+import { AuthContextType, UpdateProfileResponse, User } from "@/types";
 import axiosInstance from "@/lib/axiosInstance";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -180,19 +180,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateProfilePhoto = async (dpBase64: string) => {
+  const updateProfilePhoto = async (
+    dpBase64: string
+  ): Promise<UpdateProfileResponse> => {
     try {
       setLoading(true);
       clearError();
-      const { data } = await axiosInstance.post("/user/dp", {
-        dp: dpBase64,
+      const { data } = await axiosInstance.post<UpdateProfileResponse>(
+        "/user/dp",
+        {
+          dp: dpBase64,
+        }
+      );
+
+      if (!data.user?.id) throw new Error("Invalid user data");
+
+      setUser((prev) => {
+        if (!prev) return null;
+        const updatedUser = {
+          ...prev,
+          dp: data.user.dp || "/images/default-dp.png",
+        };
+        // 👇 localStorage sync karo
+        console.log("Updated context user:", updatedUser);
+
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        return updatedUser;
       });
 
-      if (!data.user?.id) throw new Error("Invalid user data"); // Changed to .id
-
-      setUser((prev) =>
-        prev ? { ...prev, dp: data.user.dp || "/images/default-dp.png" } : null
-      );
+      return data;
     } catch (err: any) {
       console.error("DP update failed:", err);
       setError(err.response?.data?.message || "Failed to update photo");
@@ -236,7 +252,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const userMemo = useMemo(() => user, [user?.id]);
+  const userMemo = useMemo(() => user, [user]);
 
   return (
     <AuthContext.Provider

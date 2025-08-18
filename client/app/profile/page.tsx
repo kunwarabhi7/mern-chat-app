@@ -55,7 +55,9 @@ export default function Profile() {
     if (!preview) return;
 
     try {
-      await updateProfilePhoto(preview); // Send Base64 string directly
+      const res = await updateProfilePhoto(preview); // res: UpdateProfileResponse
+      setUser((prev) => (prev ? { ...prev, dp: res.user.dp } : prev));
+      console.log("Updated user:", res.user);
       setFile(null);
       setPreview(null);
     } catch (err) {
@@ -93,7 +95,6 @@ export default function Profile() {
               {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
               <div className="flex justify-center mb-4">
                 <img
-                  key={user.dp || "default"} // Added key to force re-render when dp changes
                   src={preview ?? user.dp ?? "/images/default-dp.png"}
                   alt="Profile"
                   className="w-24 h-24 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"

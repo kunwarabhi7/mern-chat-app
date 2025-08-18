@@ -30,7 +30,6 @@ export function Navbar() {
     });
 
     socket.on("userUpdated", (updatedUser) => {
-      console.log("Received userUpdated event in Navbar:", updatedUser);
       if (updatedUser.id === user.id) {
         setUser({ ...user, dp: updatedUser.dp });
       }
@@ -54,19 +53,12 @@ export function Navbar() {
 
   const handleLogout = async () => {
     try {
-      console.log("Triggering logout...");
       await logout();
-    } catch (err) {
-      console.error("Logout error:", err);
-    }
+    } catch (err) {}
     setIsMenuOpen(false);
   };
-  console.log(
-    "Image src2:",
-    user?.dp
-      ? `${process.env.NEXT_PUBLIC_API_URL}${user.dp}`
-      : "/images/default-dp.png"
-  );
+  console.log("Navbar user.dp:", user?.dp?.substring(0, 50));
+
   return (
     <motion.nav
       className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 shadow-md"
@@ -92,8 +84,9 @@ export function Navbar() {
               <span className="text-gray-700 dark:text-gray-300 flex items-center gap-2 text-sm sm:text-base">
                 <span>Welcome, {user.username}</span>
                 <img
-                  className="w-12 h-12 rounded-full object-cover"
+                  key={user?.dp}
                   src={user.dp || ""}
+                  className="w-12 h-12 rounded-full object-cover"
                   alt={user.username || "Profile"}
                 />
               </span>
@@ -184,6 +177,7 @@ export function Navbar() {
                     disabled
                   >
                     <img
+                      key={user?.dp}
                       className="w-8 h-8 rounded-full object-cover"
                       src={user.dp || ""}
                       alt={user.username || "Profile"}

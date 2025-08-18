@@ -38,15 +38,18 @@ export default function UserList({
           >
             <img
               src={
-                user.dp
+                user.dp?.startsWith("data:") // agar base64 hai
+                  ? user.dp
+                  : user.dp
                   ? `${process.env.NEXT_PUBLIC_API_URL}${
                       user.dp
-                    }?t=${Date.now()}`
+                    }?t=${Date.now()}` // server path
                   : "/images/default-dp.png"
               }
               alt={user.username}
               className="w-8 h-8 rounded-full object-cover"
             />
+
             <div className="flex-1">
               <div className="flex items-center space-x-2">
                 <p className="text-sm sm:text-base">{user.username}</p>

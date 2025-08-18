@@ -2,8 +2,6 @@ import User from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import BlackList from "../models/Blacklist.model.js";
-import fs from "fs";
-import path from "path";
 
 dotenv.config();
 
@@ -179,13 +177,13 @@ export const uploadDP = async (req, res) => {
     await user.save();
 
     const io = req.app.get("io");
+
     if (io) {
       io.emit("userUpdated", {
         id: user._id.toString(),
         dp: user.dp,
       });
     }
-
     res.status(200).json({
       message: "DP updated successfully",
       user: {
@@ -193,6 +191,7 @@ export const uploadDP = async (req, res) => {
         username: user.username,
         email: user.email,
         dp: user.dp,
+        updatedAt: Date.now(),
       },
     });
   } catch (error) {

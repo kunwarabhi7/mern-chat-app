@@ -31,7 +31,7 @@ export default function Chat() {
       </div>
     );
   }
-
+  console.log(users, "userss");
   if (!user) {
     return (
       <div className="flex h-screen items-center justify-center">
