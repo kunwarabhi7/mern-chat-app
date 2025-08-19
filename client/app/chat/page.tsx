@@ -9,6 +9,7 @@ import UserList from "./component/UserList";
 import MessageList from "./component/MessageList";
 import MessageInput from "./component/MessageInput";
 import { MessageSquare } from "lucide-react";
+import Link from "next/link";
 
 export default function Chat() {
   const { user, loading: authLoading } = useAuth();
@@ -106,11 +107,13 @@ export default function Chat() {
                 <span>ChatApp - {user.username}</span>
               </div>
               {user?.dp && (
-                <img
-                  src={user?.dp}
-                  alt={user.username}
-                  className="w-9 h-9 rounded-full object-cover"
-                />
+                <Link href="/profile">
+                  <img
+                    src={user?.dp}
+                    alt={user.username}
+                    className="w-9 h-9 rounded-full object-cover"
+                  />
+                </Link>
               )}
             </CardTitle>
           </CardHeader>
