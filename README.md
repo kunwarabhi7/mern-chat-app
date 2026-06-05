@@ -1,0 +1,5 @@
+server .env
+JWT_SECRET=
+MONGO_URI=
+NODE_ENV=
+PORT=
