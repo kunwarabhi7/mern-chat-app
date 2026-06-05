@@ -1,5 +1,202 @@
-server .env
-JWT_SECRET=
-MONGO_URI=
-NODE_ENV=
-PORT=
+# MERN Stack Application with Docker Compose
+
+A full stack MERN application using:
+
+* Next.js Frontend
+* Node.js + Express Backend
+* MongoDB Database
+* Docker & Docker Compose
+
+---
+
+# Tech Stack
+
+## Frontend
+
+* Next.js
+* React.js
+
+## Backend
+
+* Node.js
+* Express.js
+
+## Database
+
+* MongoDB
+
+## DevOps
+
+* Docker
+* Docker Compose
+
+---
+
+# Project Structure
+
+```txt
+project-root/
+│
+├── client/
+│   ├── Dockerfile
+│   ├── .env
+│   └── ...
+│
+├── server/
+│   ├── Dockerfile
+│   ├── .env
+│   └── ...
+│
+└── docker-compose.yml
+```
+
+---
+
+# Environment Variables
+
+## Client `.env`
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
+NEXT_PUBLIC_SOCKET_URL=http://localhost:5000/api
+API_URL=http://localhost:5000/api
+```
+
+---
+
+## Server `.env`
+
+```env
+PORT=5000
+NODE_ENV=production
+JWT_SECRET=your_secret_key
+MONGO_URI=mongodb://mongo:27017/mydb
+```
+
+---
+
+# Docker Setup
+
+## Build and Start Containers
+
+```bash
+docker compose up --build
+```
+
+Run in detached mode:
+
+```bash
+docker compose up -d --build
+```
+
+---
+
+# Stop Containers
+
+```bash
+docker compose down
+```
+
+Remove volumes also:
+
+```bash
+docker compose down -v
+```
+
+---
+
+# Docker Services
+
+## Client
+
+* Runs Next.js frontend
+* Exposed on port `3000`
+
+## Server
+
+* Runs Node.js + Express backend
+* Exposed on port `5000`
+
+## MongoDB
+
+* MongoDB database container
+* Uses Docker volume for persistent storage
+
+---
+
+# Docker Networking
+
+Docker Compose automatically creates a shared network between:
+
+* client
+* server
+* mongo
+
+Internal communication:
+
+```txt
+Frontend → http://server:5000
+Backend → mongodb://mongo:27017
+```
+
+---
+
+# Access Application
+
+## Frontend
+
+```txt
+http://localhost:3000
+```
+
+## Backend
+
+```txt
+http://localhost:5000
+```
+
+---
+
+# Useful Docker Commands
+
+## View Running Containers
+
+```bash
+docker ps
+```
+
+## View Logs
+
+```bash
+docker compose logs
+```
+
+Specific service logs:
+
+```bash
+docker compose logs server
+docker compose logs client
+```
+
+## Rebuild Containers
+
+```bash
+docker compose up --build
+```
+
+---
+
+# Features
+
+* Full MERN Stack Application
+* Dockerized Frontend & Backend
+* MongoDB Volume Persistence
+* Docker Compose Networking
+* Environment Variable Support
+* Production Ready Structure
+
+---
+
+# Author
+
+Abhishek
