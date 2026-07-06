@@ -15,8 +15,9 @@ pipeline {
                     )
                 ]) {
                     sh '''
-                        cp "$CLIENT_ENV" client/.env
-                        cp "$SERVER_ENV" server/.env
+			rm -f client/.env server/.env
+                        install -m 600 "$CLIENT_ENV" client/.env
+                        install -m 600 "$SERVER_ENV" server/.env
                     '''
                 }
             }
