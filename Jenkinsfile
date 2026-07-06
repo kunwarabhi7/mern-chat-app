@@ -2,13 +2,6 @@ pipeline {
     agent any
 
     stages {
-        stage("Checkout") {
-            steps {
-                git branch: "main",
-                    url: "https://github.com/kunwarabhi7/mern-chat-app.git"
-            }
-        }
-
         stage("Setup Environment") {
             steps {
                 withCredentials([
